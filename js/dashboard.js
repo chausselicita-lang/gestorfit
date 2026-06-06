@@ -23,76 +23,99 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ─────────────────────────────────────────────────
 
 async function carregarDashboard() {
-  try {
-    const [metricas, vencimentos, pagamentos, alunosRec] = await Promise.all([
-      buscarMetricasMes(),
-      buscarVencimentosProximos(7),
-      buscarPagamentos({ limit: 8 }),
-      buscarAlunosRecentes(6),
-    ]);
+  // Cada seção carrega independentemente — falha de uma não trava as outras
+  const safe = (fn) => fn().catch(err => { console.error(err); return null; });
 
-    renderizarKPIs(metricas, vencimentos);
-    renderizarGraficos();
-    renderizarAlunosRecentes(alunosRec);
-    renderizarInadimplentes();
-    renderizarVencimentos(vencimentos);
-    renderizarUltimosPagamentos(pagamentos);
-    atualizarBadgeNotificacoes(metricas, vencimentos);
-    gerarNotificacoes(metricas, vencimentos);
+  const [metricas, vencimentos, pagamentos, alunosRec] = await Promise.all([
+    safe(buscarMetricasMes),
+    safe(() => buscarVencimentosProximos(7)),
+    safe(() => buscarPagamentos({ limit: 8 })),
+    safe(() => buscarAlunosRecentes(6)),
+  ]);
 
-    await atualizarStatusInadimplentes();
-  } catch (err) {
-    console.error('Erro ao carregar dashboard:', err);
-    mostrarToast('Erro ao carregar dados do dashboard', 'erro');
+  if (metricas) {
+    renderizarKPIs(metricas, vencimentos || []);
+    atualizarBadgeNotificacoes(metricas, vencimentos || []);
+    gerarNotificacoes(metricas, vencimentos || []);
+  } else {
+    // Mostrar skeletons como estado de erro
+    ['skAtivos','skReceita','skInadimpl','skVenc'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = '<div style="color:var(--text-secondary);font-size:12px;padding:8px">Falha ao carregar</div>';
+    });
+    mostrarToast('Erro ao carregar métricas — verifique a conexão', 'erro');
   }
+
+  renderizarGraficos();
+  renderizarAlunosRecentes(alunosRec || []);
+  renderizarInadimplentes();
+  renderizarVencimentos(vencimentos || []);
+  renderizarUltimosPagamentos(pagamentos || []);
+
+  safe(atualizarStatusInadimplentes);
 }
 
 // ─────────────────────────────────────────────────
 // KPIs
 // ─────────────────────────────────────────────────
 
+function _setEl(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+
+function _setTrend(id, atual, anterior) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (!anterior || anterior === 0) {
+    el.className = 'kpi-trend-badge neutral';
+    el.textContent = '–';
+    return;
+  }
+  const pct = ((atual - anterior) / anterior * 100).toFixed(0);
+  if (Number(pct) > 0) {
+    el.className = 'kpi-trend-badge up';
+    el.innerHTML = `<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg> ${pct}%`;
+  } else if (Number(pct) < 0) {
+    el.className = 'kpi-trend-badge down';
+    el.innerHTML = `<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg> ${Math.abs(pct)}%`;
+  } else {
+    el.className = 'kpi-trend-badge neutral';
+    el.textContent = '0%';
+  }
+}
+
 function renderizarKPIs(m, vencimentos) {
   // Alunos Ativos
-  document.getElementById('totalAtivos').textContent = m.totalAtivos;
-  document.getElementById('trendAtivos').outerHTML =
-    trendBadge(m.totalAtivos, m.totalAtivosPrev).replace(
-      'kpi-trend-badge', 'kpi-trend-badge'
-    );
+  _setEl('totalAtivos', m.totalAtivos);
+  _setTrend('trendAtivos', m.totalAtivos, m.totalAtivosPrev);
   showKpiData('skAtivos', 'dataAtivos');
 
   // Receita do mês
-  document.getElementById('receitaMes').textContent = formatarMoeda(m.receitaMes);
-  const elTrendRec = document.getElementById('trendReceita');
-  if (elTrendRec) elTrendRec.outerHTML = trendBadge(m.receitaMes, m.receitaMesAnterior);
-  document.getElementById('totalReceitaLabel').textContent =
-    m.receitaMes > 0 ? formatarMoeda(m.receitaMes) + ' este mês' : '';
+  _setEl('receitaMes', formatarMoeda(m.receitaMes));
+  _setTrend('trendReceita', m.receitaMes, m.receitaMesAnterior);
+  _setEl('totalReceitaLabel', m.receitaMes > 0 ? formatarMoeda(m.receitaMes) + ' este mês' : '');
   showKpiData('skReceita', 'dataReceita');
 
   // Inadimplentes
-  document.getElementById('totalInadimplentes').textContent = m.totalInadimplentes;
-  const elTrendInad = document.getElementById('trendInadimpl');
-  if (elTrendInad) {
-    const cls = m.totalInadimplentes > 0 ? 'down' : 'neutral';
-    elTrendInad.className = `kpi-trend-badge ${cls}`;
-    elTrendInad.textContent = m.totalInadimplentes > 0 ? 'Atenção' : 'OK';
+  _setEl('totalInadimplentes', m.totalInadimplentes);
+  const elInad = document.getElementById('trendInadimpl');
+  if (elInad) {
+    elInad.className = m.totalInadimplentes > 0 ? 'kpi-trend-badge down' : 'kpi-trend-badge neutral';
+    elInad.textContent = m.totalInadimplentes > 0 ? 'Atenção' : 'OK';
   }
-  const subInad = document.getElementById('valorInadimplente');
-  if (subInad) {
-    subInad.textContent = m.valorInadimplente > 0
-      ? `Em aberto: ${formatarMoeda(m.valorInadimplente)}`
-      : '';
-  }
-  document.getElementById('countInadimpl').textContent = m.totalInadimplentes;
+  _setEl('valorInadimplente', m.valorInadimplente > 0 ? `Em aberto: ${formatarMoeda(m.valorInadimplente)}` : '');
+  _setEl('countInadimpl', m.totalInadimplentes);
   showKpiData('skInadimpl', 'dataInadimpl');
 
   // Vencimentos 7 dias
-  document.getElementById('vencemHoje').textContent = vencimentos.length;
-  const elTrendVenc = document.getElementById('trendVenc');
-  if (elTrendVenc) {
-    elTrendVenc.className = vencimentos.length > 0 ? 'kpi-trend-badge warning' : 'kpi-trend-badge neutral';
-    elTrendVenc.textContent = vencimentos.length > 0 ? 'Urgente' : 'OK';
+  _setEl('vencemHoje', vencimentos.length);
+  const elVenc = document.getElementById('trendVenc');
+  if (elVenc) {
+    elVenc.className = vencimentos.length > 0 ? 'kpi-trend-badge down' : 'kpi-trend-badge neutral';
+    elVenc.textContent = vencimentos.length > 0 ? 'Urgente' : 'OK';
   }
-  document.getElementById('countVencimentos').textContent = vencimentos.length;
+  _setEl('countVencimentos', vencimentos.length);
   showKpiData('skVenc', 'dataVenc');
 
   if (typeof lucide !== 'undefined') lucide.createIcons();

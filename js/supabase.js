@@ -184,42 +184,44 @@ async function buscarPagamentos(filtros = {}) {
 // ─── MÉTRICAS ─────────────────────────────────────
 
 async function buscarMetricasMes() {
-  const mesAtual  = new Date().toISOString().slice(0, 7);
+  const mesAtual = new Date().toISOString().slice(0, 7);
 
-  // mês anterior para calcular variação
   const d = new Date();
   d.setMonth(d.getMonth() - 1);
   const mesAnterior = d.toISOString().slice(0, 7);
 
   const [
     ativosRes,
-    ativosMesAnteriorRes,
     inadimplentes,
     pagamentosRes,
     pagamentosMesAnteriorRes,
     planosData,
   ] = await Promise.all([
-    db.from('alunos').select('id', { count: 'exact', head: true })
-      .eq('academia_id', CONFIG.ACADEMIA_ID).eq('status', 'ativo'),
-    db.from('alunos').select('id', { count: 'exact', head: true })
-      .eq('academia_id', CONFIG.ACADEMIA_ID).in('status', ['ativo', 'inadimplente']),
+    db.from('alunos')
+      .select('id', { count: 'exact' })
+      .eq('academia_id', CONFIG.ACADEMIA_ID)
+      .eq('status', 'ativo'),
     buscarInadimplentes(),
-    db.from('pagamentos').select('valor')
+    db.from('pagamentos')
+      .select('valor')
       .eq('academia_id', CONFIG.ACADEMIA_ID)
-      .eq('referencia_mes', mesAtual).eq('status', 'pago'),
-    db.from('pagamentos').select('valor')
+      .eq('referencia_mes', mesAtual)
+      .eq('status', 'pago'),
+    db.from('pagamentos')
+      .select('valor')
       .eq('academia_id', CONFIG.ACADEMIA_ID)
-      .eq('referencia_mes', mesAnterior).eq('status', 'pago'),
+      .eq('referencia_mes', mesAnterior)
+      .eq('status', 'pago'),
     buscarPlanos(),
   ]);
 
-  const receitaMes         = pagamentosRes.data?.reduce((s, p) => s + parseFloat(p.valor), 0) || 0;
-  const receitaMesAnterior = pagamentosMesAnteriorRes.data?.reduce((s, p) => s + parseFloat(p.valor), 0) || 0;
+  const receitaMes         = (pagamentosRes.data || []).reduce((s, p) => s + parseFloat(p.valor), 0);
+  const receitaMesAnterior = (pagamentosMesAnteriorRes.data || []).reduce((s, p) => s + parseFloat(p.valor), 0);
   const valorInadimplente  = inadimplentes.reduce((s, a) => s + parseFloat(a.planos_academia?.valor || 0), 0);
 
   return {
     totalAtivos:        ativosRes.count || 0,
-    totalAtivosPrev:    ativosMesAnteriorRes.count || 0,
+    totalAtivosPrev:    0,
     totalInadimplentes: inadimplentes.length,
     receitaMes,
     receitaMesAnterior,
