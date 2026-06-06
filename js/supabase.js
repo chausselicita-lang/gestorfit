@@ -23,10 +23,11 @@ async function getUsuarioAtual() {
   return user;
 }
 
-async function getAcademiaDoUsuario(userId) {
+async function getAcademiaDoUsuario() {
   const { data, error } = await db.from('academias')
     .select('*')
-    .eq('usuario_id', userId)
+    .eq('ativo', true)
+    .limit(1)
     .single();
   if (error) return null;
   return data;

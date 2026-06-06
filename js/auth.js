@@ -9,7 +9,7 @@ async function verificarAuth() {
       return false;
     }
 
-    const academia = await getAcademiaDoUsuario(usuario.id);
+    const academia = await getAcademiaDoUsuario();
     if (!academia) {
       mostrarToast('Academia não encontrada. Contate o suporte.', 'erro');
       await logout();

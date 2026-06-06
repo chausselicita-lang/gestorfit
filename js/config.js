@@ -5,8 +5,8 @@ const CONFIG = {
   SUPABASE_URL: 'https://zigghtvlmftgjlohuhla.supabase.co',
   SUPABASE_ANON_KEY: 'sb_publishable_o5ibiwWTvnZ8gXfdJQkFqA_jKZhTiGU',
 
-  // ID da academia logada (preenchido após autenticação)
-  ACADEMIA_ID: null,
+  // ID da academia (preenchido após autenticação; fallback hardcoded)
+  ACADEMIA_ID: 'da96462c-a98b-4968-b68a-8916f2755f4e',
 
   // WhatsApp API (Z-API ou Evolution API)
   WHATSAPP_INSTANCE: 'SUA_INSTANCIA',
