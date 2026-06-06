@@ -1,45 +1,31 @@
 -- ============================================================
 -- GESTORFIT — SCRIPT DE CONFIGURAÇÃO COMPLETO
--- Execute no Supabase SQL Editor (em ordem)
+-- Cole este arquivo no Supabase SQL Editor e clique em Run
+-- ✅ Todos os valores já estão preenchidos automaticamente
 -- ============================================================
 
 -- ============================================================
--- PASSO 1: ANTES DE RODAR ESTE SCRIPT
--- Crie o usuário em: Authentication → Users → Add user
--- Copie o UUID gerado e substitua abaixo
--- ============================================================
-
--- ⚠️  SUBSTITUA ESTES DOIS VALORES:
-DO $$
-BEGIN
-  RAISE NOTICE '================================================';
-  RAISE NOTICE 'Substitua as variáveis no bloco abaixo!';
-  RAISE NOTICE '================================================';
-END $$;
-
--- ============================================================
--- PASSO 2: ADICIONAR usuario_id NA TABELA ACADEMIAS
+-- 1. ADICIONAR usuario_id NA TABELA ACADEMIAS
 -- ============================================================
 
 ALTER TABLE academias
   ADD COLUMN IF NOT EXISTS usuario_id UUID REFERENCES auth.users(id);
 
 -- ============================================================
--- PASSO 3: INSERIR SUA ACADEMIA
--- Substitua os valores e o UUID do usuário
+-- 2. INSERIR ACADEMIA
 -- ============================================================
 
 INSERT INTO academias (nome, telefone, email, usuario_id)
 VALUES (
-  'Nome da Sua Academia',                  -- ← troque pelo nome real
-  '(77) 99999-9999',                       -- ← troque pelo telefone
-  'seu@email.com',                         -- ← troque pelo e-mail
-  'UUID_DO_USUARIO_AQUI'                   -- ← cole o UUID do Auth → Users
+  'GestorFit Academia',
+  '(77) 99999-9999',
+  'chausselicita@gmail.com',
+  '32b5f22d-3f42-480b-82d2-a0918ba1dbbc'
 )
 ON CONFLICT DO NOTHING;
 
 -- ============================================================
--- PASSO 4: INSERIR PLANOS PADRÃO
+-- 3. INSERIR PLANOS PADRÃO
 -- ============================================================
 
 INSERT INTO planos_academia (academia_id, nome, duracao_dias, valor, descricao)
@@ -55,11 +41,11 @@ CROSS JOIN (VALUES
   ('Trimestral', 90,  239.90, 'Plano trimestral com desconto'),
   ('Anual',      365, 799.90, 'Plano anual — melhor custo-benefício')
 ) AS p(nome, duracao_dias, valor, descricao)
-WHERE a.usuario_id = 'UUID_DO_USUARIO_AQUI'  -- ← mesmo UUID acima
+WHERE a.usuario_id = '32b5f22d-3f42-480b-82d2-a0918ba1dbbc'
 ON CONFLICT DO NOTHING;
 
 -- ============================================================
--- PASSO 5: FUNÇÃO AUXILIAR — retorna o academia_id do usuário logado
+-- 4. FUNÇÃO AUXILIAR — retorna academia_id do usuário logado
 -- ============================================================
 
 CREATE OR REPLACE FUNCTION get_my_academia_id()
@@ -72,7 +58,7 @@ AS $$
 $$;
 
 -- ============================================================
--- PASSO 6: REMOVER POLÍTICAS RLS ANTIGAS (genéricas)
+-- 5. REMOVER POLÍTICAS RLS ANTIGAS
 -- ============================================================
 
 DROP POLICY IF EXISTS "Acesso total autenticado" ON academias;
@@ -82,42 +68,30 @@ DROP POLICY IF EXISTS "Acesso total autenticado" ON planos_academia;
 DROP POLICY IF EXISTS "Acesso total autenticado" ON notificacoes;
 
 -- ============================================================
--- PASSO 7: POLÍTICAS RLS POR ACADEMIA (multi-tenant seguro)
+-- 6. POLÍTICAS RLS POR ACADEMIA (multi-tenant seguro)
 -- ============================================================
 
--- ACADEMIAS: cada usuário acessa só a sua
 CREATE POLICY "academia_owner" ON academias
-  FOR ALL
-  USING (usuario_id = auth.uid());
+  FOR ALL USING (usuario_id = auth.uid());
 
--- ALUNOS: acesso apenas à academia do usuário logado
 CREATE POLICY "alunos_por_academia" ON alunos
-  FOR ALL
-  USING (academia_id = get_my_academia_id());
+  FOR ALL USING (academia_id = get_my_academia_id());
 
--- PAGAMENTOS: acesso apenas à academia do usuário logado
 CREATE POLICY "pagamentos_por_academia" ON pagamentos
-  FOR ALL
-  USING (academia_id = get_my_academia_id());
+  FOR ALL USING (academia_id = get_my_academia_id());
 
--- PAGAMENTOS: leitura pública por código de verificação (página verificar.html)
 CREATE POLICY "pagamentos_verificacao_publica" ON pagamentos
-  FOR SELECT
-  TO anon
+  FOR SELECT TO anon
   USING (codigo_verificacao IS NOT NULL);
 
--- PLANOS: acesso apenas à academia do usuário logado
 CREATE POLICY "planos_por_academia" ON planos_academia
-  FOR ALL
-  USING (academia_id = get_my_academia_id());
+  FOR ALL USING (academia_id = get_my_academia_id());
 
--- NOTIFICAÇÕES: acesso apenas à academia do usuário logado
 CREATE POLICY "notificacoes_por_academia" ON notificacoes
-  FOR ALL
-  USING (academia_id = get_my_academia_id());
+  FOR ALL USING (academia_id = get_my_academia_id());
 
 -- ============================================================
--- PASSO 8: VERIFICAR SE TUDO FOI CRIADO CORRETAMENTE
+-- 7. VERIFICAÇÃO FINAL
 -- ============================================================
 
 SELECT
