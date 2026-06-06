@@ -22,10 +22,22 @@ async function getUsuarioAtual() {
 }
 
 async function getAcademiaDoUsuario() {
-  const { data, error } = await db.from('academias')
-    .select('*').eq('ativo', true).limit(1).single();
-  if (error) return null;
-  return data;
+  // Tenta pelo ID já configurado — mais direto e confiável
+  if (CONFIG.ACADEMIA_ID) {
+    const { data } = await db.from('academias')
+      .select('*')
+      .eq('id', CONFIG.ACADEMIA_ID)
+      .maybeSingle();
+    if (data) return data;
+  }
+
+  // Fallback: qualquer academia ativa
+  const { data } = await db.from('academias')
+    .select('*')
+    .eq('ativo', true)
+    .limit(1)
+    .maybeSingle();
+  return data || null;
 }
 
 // ─── ALUNOS ───────────────────────────────────────

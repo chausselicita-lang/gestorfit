@@ -4,38 +4,51 @@ async function verificarAuth() {
   try {
     const usuario = await getUsuarioAtual();
     if (!usuario) {
-      const basePath = window.location.pathname.includes('/pages/') ? '../' : '';
-      window.location.href = basePath + 'login.html';
+      const base = window.location.pathname.includes('/pages/') ? '../' : '';
+      window.location.href = base + 'login.html';
       return false;
     }
 
+    // 1. Tenta buscar academia pelo ID já configurado
+    // 2. Fallback: primeira academia ativa
+    // 3. Se nenhuma encontrar, usa o ID hardcoded e continua mesmo assim
     const academia = await getAcademiaDoUsuario();
-    if (!academia) {
-      mostrarToast('Academia não encontrada. Contate o suporte.', 'erro');
-      await logout();
+
+    if (academia) {
+      CONFIG.ACADEMIA_ID = academia.id;
+      _preencherSidebarUsuario(academia.nome);
+    } else if (CONFIG.ACADEMIA_ID) {
+      // ID já configurado no config.js — prosseguir sem dados da academia
+      _preencherSidebarUsuario('Academia');
+    } else {
+      mostrarToast('Academia não encontrada. Verifique o CONFIG.ACADEMIA_ID.', 'erro');
       return false;
     }
-
-    CONFIG.ACADEMIA_ID = academia.id;
-
-    // Preencher info do usuário na sidebar
-    const el = document.getElementById('userName');
-    const av = document.getElementById('userAvatar');
-    if (el) el.textContent = academia.nome;
-    if (av) av.textContent = academia.nome.charAt(0).toUpperCase();
 
     return true;
   } catch (err) {
     console.error('Auth error:', err);
+    // Se o ID já está configurado, permite continuar mesmo com erro de rede
+    if (CONFIG.ACADEMIA_ID) {
+      _preencherSidebarUsuario('Academia');
+      return true;
+    }
     return false;
   }
+}
+
+function _preencherSidebarUsuario(nome) {
+  const el = document.getElementById('userName');
+  const av = document.getElementById('userAvatar');
+  if (el) el.textContent = nome;
+  if (av) av.textContent = (nome || 'A').charAt(0).toUpperCase();
 }
 
 async function handleLogout() {
   try {
     await logout();
-    const basePath = window.location.pathname.includes('/pages/') ? '../' : '';
-    window.location.href = basePath + 'login.html';
+    const base = window.location.pathname.includes('/pages/') ? '../' : '';
+    window.location.href = base + 'login.html';
   } catch (err) {
     mostrarToast('Erro ao sair', 'erro');
   }
