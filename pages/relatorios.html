@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GestorFit — Relatórios</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+<div class="app-layout">
+
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">💪</span>
+      <span class="logo-text">GestorFit</span>
+    </div>
+    <ul class="nav-menu">
+      <li class="nav-item" onclick="location.href='../index.html'"><span class="nav-icon">📊</span><span>Dashboard</span></li>
+      <li class="nav-item" onclick="location.href='alunos.html'"><span class="nav-icon">👥</span><span>Alunos</span></li>
+      <li class="nav-item" onclick="location.href='pagamentos.html'"><span class="nav-icon">💰</span><span>Pagamentos</span></li>
+      <li class="nav-item active"><span class="nav-icon">📄</span><span>Relatórios</span></li>
+      <li class="nav-item" onclick="location.href='configuracoes.html'"><span class="nav-icon">⚙️</span><span>Configurações</span></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="userAvatar">A</div>
+        <div class="user-details">
+          <span class="user-name" id="userName">Academia</span>
+          <span class="user-plan">Plano Pro</span>
+        </div>
+      </div>
+      <button class="btn-logout" id="btnLogout">Sair</button>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <header class="top-header">
+      <button class="btn-menu-mobile" id="btnMenuMobile">☰</button>
+      <div class="header-title">
+        <h1>Relatórios</h1>
+        <span class="page-date">Exporte dados em PDF</span>
+      </div>
+    </header>
+
+    <div class="page-content">
+
+      <!-- Formulário de Relatório Mensal -->
+      <div class="relatorio-form">
+        <div class="page-title-bar">
+          <div>
+            <h2>📄 Relatório Financeiro Mensal</h2>
+            <p>Gere um PDF com todos os pagamentos do mês selecionado</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap">
+          <div class="form-group">
+            <label>Mês de Referência</label>
+            <input type="month" id="relMes" style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--branco);font-family:var(--font-body);font-size:14px;outline:none;">
+          </div>
+          <button class="btn-primary" id="btnGerarRelatorio">📥 Gerar PDF</button>
+          <button class="btn-secondary" id="btnPrevisualizar">👁 Pré-visualizar</button>
+        </div>
+      </div>
+
+      <!-- Estatísticas do mês -->
+      <div class="stat-row" id="statRow" style="display:none">
+        <div class="stat-item">
+          <div class="stat-value" id="statTotal">--</div>
+          <div class="stat-label">Total Recebido</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="statQtd" style="color:#4da3ff">--</div>
+          <div class="stat-label">Pagamentos</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="statMedia">--</div>
+          <div class="stat-label">Ticket Médio</div>
+        </div>
+      </div>
+
+      <!-- Preview dos dados -->
+      <div id="previewSection" style="display:none">
+        <div class="page-title-bar" style="margin-top:0">
+          <h2>📋 Pagamentos do Mês</h2>
+        </div>
+        <div class="data-table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Aluno</th>
+                <th>Data</th>
+                <th>Forma</th>
+                <th>Valor</th>
+                <th>Código</th>
+              </tr>
+            </thead>
+            <tbody id="tabelaPreview"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Inadimplentes -->
+      <div style="margin-top:var(--gap-lg)">
+        <div class="page-title-bar">
+          <div>
+            <h2>⚠️ Relatório de Inadimplentes</h2>
+            <p>Lista de alunos com pagamento em atraso</p>
+          </div>
+          <button class="btn-secondary" id="btnGerarInadimplentes">📥 Exportar PDF</button>
+        </div>
+        <div class="data-table-wrapper" id="tabelaInadimplentesWrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Aluno</th>
+                <th>Plano</th>
+                <th>Vencimento</th>
+                <th>Dias em Atraso</th>
+                <th>Valor</th>
+                <th>WhatsApp</th>
+              </tr>
+            </thead>
+            <tbody id="tabelaInadimplentes">
+              <tr><td colspan="6"><div class="loading-state"><div class="spinner"></div></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="../js/config.js"></script>
+<script src="../js/supabase.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/relatorios.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    const ok = await verificarAuth();
+    if (!ok) return;
+
+    document.getElementById('relMes').value = new Date().toISOString().slice(0, 7);
+
+    await carregarInadimplentes();
+    configurarEventos();
+    configurarMenuMobile();
+  });
+
+  function configurarEventos() {
+    document.getElementById('btnGerarRelatorio').onclick = async () => {
+      const mes = document.getElementById('relMes').value;
+      if (!mes) { mostrarToast('Selecione um mês', 'aviso'); return; }
+      const btn = document.getElementById('btnGerarRelatorio');
+      btn.disabled = true; btn.textContent = 'Gerando...';
+      await gerarRelatorioMensalPDF(mes);
+      btn.disabled = false; btn.textContent = '📥 Gerar PDF';
+    };
+
+    document.getElementById('btnPrevisualizar').onclick = async () => {
+      const mes = document.getElementById('relMes').value;
+      if (!mes) { mostrarToast('Selecione um mês', 'aviso'); return; }
+      await previsualizar(mes);
+    };
+
+    document.getElementById('btnGerarInadimplentes').onclick = gerarRelatorioInadimplentes;
+  }
+
+  async function previsualizar(mes) {
+    const pagamentos = await buscarDadosRelatorio(mes);
+    const section = document.getElementById('previewSection');
+    const row = document.getElementById('statRow');
+
+    if (!pagamentos.length) {
+      mostrarToast('Nenhum pagamento neste mês', 'aviso');
+      section.style.display = 'none';
+      row.style.display = 'none';
+      return;
+    }
+
+    const total = pagamentos.reduce((s, p) => s + parseFloat(p.valor), 0);
+    document.getElementById('statTotal').textContent = formatarMoeda(total);
+    document.getElementById('statQtd').textContent = pagamentos.length;
+    document.getElementById('statMedia').textContent = formatarMoeda(total / pagamentos.length);
+    row.style.display = 'grid';
+
+    document.getElementById('tabelaPreview').innerHTML = pagamentos.map(p => `
+      <tr>
+        <td style="font-weight:600">${p.alunos?.nome || '--'}</td>
+        <td>${formatarData(p.data_pagamento)}</td>
+        <td>${getFormaPagamentoBadge(p.forma_pagamento)}</td>
+        <td style="color:var(--verde-neon);font-weight:700">${formatarMoeda(p.valor)}</td>
+        <td style="font-size:12px;color:var(--cinza-texto)">${p.codigo_verificacao || '--'}</td>
+      </tr>`).join('');
+
+    section.style.display = 'block';
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  async function carregarInadimplentes() {
+    const tbody = document.getElementById('tabelaInadimplentes');
+    try {
+      const lista = await buscarInadimplentes();
+      if (!lista.length) {
+        tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">✅ Nenhum inadimplente</div></td></tr>';
+        return;
+      }
+      tbody.innerHTML = lista.map(a => {
+        const dias = Math.abs(calcularDiasRestantes(a.data_vencimento));
+        return `
+          <tr>
+            <td style="font-weight:600">${a.nome}</td>
+            <td>${a.planos_academia?.nome || '--'}</td>
+            <td style="color:var(--vermelho-alerta)">${formatarData(a.data_vencimento)}</td>
+            <td><span class="badge-status vermelho">${dias} dia(s)</span></td>
+            <td style="color:var(--vermelho-alerta);font-weight:700">${formatarMoeda(a.planos_academia?.valor)}</td>
+            <td>
+              ${a.whatsapp ? `<a href="https://wa.me/55${a.whatsapp.replace(/\D/g,'')}" target="_blank" style="color:var(--verde-neon);font-size:13px;">${a.whatsapp}</a>` : '--'}
+            </td>
+          </tr>`;
+      }).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Erro: ${err.message}</td></tr>`;
+    }
+  }
+
+  async function gerarRelatorioInadimplentes() {
+    const lista = await buscarInadimplentes();
+    if (!lista.length) { mostrarToast('Nenhum inadimplente', 'aviso'); return; }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    doc.setFillColor(10, 10, 15);
+    doc.rect(0, 0, 210, 40, 'F');
+    doc.setTextColor(255, 59, 92);
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('GestorFit', 20, 20);
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(12);
+    doc.text('Relatório de Inadimplentes', 20, 32);
+
+    doc.setTextColor(80, 80, 80);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Emitido em: ${new Date().toLocaleString('pt-BR')}`, 20, 55);
+
+    const totalVal = lista.reduce((s, a) => s + parseFloat(a.planos_academia?.valor || 0), 0);
+    doc.setFillColor(255, 240, 240);
+    doc.rect(15, 62, 180, 16, 'F');
+    doc.setTextColor(200, 0, 0);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Total em aberto: ${formatarMoeda(totalVal)} · ${lista.length} aluno(s)`, 20, 73);
+
+    let y = 90;
+    doc.setFillColor(30, 30, 50);
+    doc.rect(15, y - 6, 180, 10, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Aluno', 20, y);
+    doc.text('Plano', 80, y);
+    doc.text('Vencimento', 115, y);
+    doc.text('Atraso', 150, y);
+    doc.text('Valor', 175, y);
+    y += 8;
+
+    lista.forEach((a, i) => {
+      if (y > 270) { doc.addPage(); y = 20; }
+      if (i % 2 === 0) { doc.setFillColor(255, 248, 248); doc.rect(15, y - 5, 180, 9, 'F'); }
+      doc.setTextColor(30, 30, 30);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.text(a.nome.substring(0, 28), 20, y);
+      doc.text((a.planos_academia?.nome || '--').substring(0, 15), 80, y);
+      doc.text(formatarData(a.data_vencimento), 115, y);
+      doc.text(Math.abs(calcularDiasRestantes(a.data_vencimento)) + 'd', 150, y);
+      doc.text(formatarMoeda(a.planos_academia?.valor), 175, y);
+      y += 9;
+    });
+
+    doc.save(`GestorFit-Inadimplentes-${new Date().toISOString().slice(0,10)}.pdf`);
+    mostrarToast('📄 Relatório gerado!');
+  }
+
+  function configurarMenuMobile() {
+    const btn = document.getElementById('btnMenuMobile');
+    const sidebar = document.getElementById('sidebar');
+    if (!btn) return;
+    btn.addEventListener('click', () => sidebar.classList.toggle('open'));
+  }
+</script>
+</body>
+</html>

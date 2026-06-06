@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GestorFit — Configurações</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="app-layout">
+
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">💪</span>
+      <span class="logo-text">GestorFit</span>
+    </div>
+    <ul class="nav-menu">
+      <li class="nav-item" onclick="location.href='../index.html'"><span class="nav-icon">📊</span><span>Dashboard</span></li>
+      <li class="nav-item" onclick="location.href='alunos.html'"><span class="nav-icon">👥</span><span>Alunos</span></li>
+      <li class="nav-item" onclick="location.href='pagamentos.html'"><span class="nav-icon">💰</span><span>Pagamentos</span></li>
+      <li class="nav-item" onclick="location.href='relatorios.html'"><span class="nav-icon">📄</span><span>Relatórios</span></li>
+      <li class="nav-item active"><span class="nav-icon">⚙️</span><span>Configurações</span></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="userAvatar">A</div>
+        <div class="user-details">
+          <span class="user-name" id="userName">Academia</span>
+          <span class="user-plan">Plano Pro</span>
+        </div>
+      </div>
+      <button class="btn-logout" id="btnLogout">Sair</button>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <header class="top-header">
+      <button class="btn-menu-mobile" id="btnMenuMobile">☰</button>
+      <div class="header-title">
+        <h1>Configurações</h1>
+        <span class="page-date">Dados da academia e planos</span>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <div class="config-grid">
+
+        <!-- Dados da Academia -->
+        <div class="config-card">
+          <div class="config-card-header">
+            <span>🏢</span>
+            <h3>Dados da Academia</h3>
+          </div>
+          <div class="config-card-body">
+            <div class="form-grid" style="grid-template-columns:1fr">
+              <div class="form-group">
+                <label>Nome da Academia</label>
+                <input type="text" id="acadNome" placeholder="Nome">
+              </div>
+              <div class="form-group">
+                <label>CNPJ</label>
+                <input type="text" id="acadCnpj" placeholder="00.000.000/0001-00">
+              </div>
+              <div class="form-group">
+                <label>Telefone</label>
+                <input type="tel" id="acadTelefone" placeholder="(77) 3333-4444">
+              </div>
+              <div class="form-group">
+                <label>E-mail</label>
+                <input type="email" id="acadEmail" placeholder="academia@email.com">
+              </div>
+              <div class="form-group">
+                <label>Endereço</label>
+                <textarea id="acadEndereco" rows="2" placeholder="Rua, nº, bairro, cidade"></textarea>
+              </div>
+              <button class="btn-primary" id="btnSalvarAcademia" style="justify-content:center">💾 Salvar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Planos -->
+        <div class="config-card">
+          <div class="config-card-header">
+            <span>📋</span>
+            <h3>Planos de Matrícula</h3>
+          </div>
+          <div class="config-card-body">
+            <div class="planos-list" id="planosList">
+              <div class="loading-state"><div class="spinner"></div></div>
+            </div>
+            <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--card-border)">
+              <h4 style="font-size:14px;margin-bottom:12px;color:var(--cinza-texto)">Adicionar Novo Plano</h4>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Nome</label>
+                  <input type="text" id="planoNome" placeholder="Ex: Mensal">
+                </div>
+                <div class="form-group">
+                  <label>Duração (dias)</label>
+                  <input type="number" id="planoDuracao" placeholder="30">
+                </div>
+                <div class="form-group">
+                  <label>Valor (R$)</label>
+                  <input type="number" id="planoValor" step="0.01" placeholder="89,90">
+                </div>
+                <div class="form-group">
+                  <label>Descrição</label>
+                  <input type="text" id="planoDesc" placeholder="Opcional">
+                </div>
+              </div>
+              <button class="btn-primary" id="btnAdicionarPlano" style="margin-top:12px">+ Adicionar Plano</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Segurança -->
+        <div class="config-card">
+          <div class="config-card-header">
+            <span>🔒</span>
+            <h3>Segurança</h3>
+          </div>
+          <div class="config-card-body">
+            <div class="form-grid" style="grid-template-columns:1fr">
+              <div class="form-group">
+                <label>Novo E-mail</label>
+                <input type="email" id="novoEmail" placeholder="novo@email.com">
+              </div>
+              <div class="form-group">
+                <label>Nova Senha</label>
+                <input type="password" id="novaSenha" placeholder="••••••••">
+              </div>
+              <div class="form-group">
+                <label>Confirmar Senha</label>
+                <input type="password" id="confirmarSenha" placeholder="••••••••">
+              </div>
+              <button class="btn-secondary" id="btnAlterarSenha">Alterar Credenciais</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sobre -->
+        <div class="config-card">
+          <div class="config-card-header">
+            <span>ℹ️</span>
+            <h3>Sobre o GestorFit</h3>
+          </div>
+          <div class="config-card-body" style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;font-size:14px">
+              <span style="color:var(--cinza-texto)">Versão</span>
+              <strong>1.0.0</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:14px">
+              <span style="color:var(--cinza-texto)">Plano</span>
+              <span class="badge-status verde">Pro</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:14px">
+              <span style="color:var(--cinza-texto)">Verificação de recibos</span>
+              <a href="verificar.html" style="color:var(--verde-neon);font-size:13px">Abrir página →</a>
+            </div>
+            <hr style="border:none;border-top:1px solid var(--card-border)">
+            <p style="font-size:12px;color:var(--cinza-texto);line-height:1.6">
+              GestorFit é um sistema SaaS para gestão de academias.<br>
+              Desenvolvido com ❤️ para facilitar o dia a dia do gestor.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../js/config.js"></script>
+<script src="../js/supabase.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    const ok = await verificarAuth();
+    if (!ok) return;
+    await Promise.all([carregarAcademia(), carregarPlanos()]);
+    configurarEventos();
+    configurarMenuMobile();
+  });
+
+  async function carregarAcademia() {
+    const academia = await buscarAcademia();
+    if (!academia) return;
+    document.getElementById('acadNome').value = academia.nome || '';
+    document.getElementById('acadCnpj').value = academia.cnpj || '';
+    document.getElementById('acadTelefone').value = academia.telefone || '';
+    document.getElementById('acadEmail').value = academia.email || '';
+    document.getElementById('acadEndereco').value = academia.endereco || '';
+  }
+
+  async function carregarPlanos() {
+    const container = document.getElementById('planosList');
+    try {
+      const planos = await buscarPlanos();
+      if (!planos.length) {
+        container.innerHTML = '<p style="font-size:13px;color:var(--cinza-texto)">Nenhum plano cadastrado.</p>';
+        return;
+      }
+      container.innerHTML = planos.map(p => `
+        <div class="plano-item">
+          <div>
+            <div class="plano-nome">${p.nome}</div>
+            <div class="plano-detalhe">${p.duracao_dias} dias${p.descricao ? ' · ' + p.descricao : ''}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <span class="plano-valor">${formatarMoeda(p.valor)}</span>
+            <button class="btn-sm-danger" onclick="removerPlano('${p.id}')">🗑️</button>
+          </div>
+        </div>`).join('');
+    } catch (err) {
+      container.innerHTML = `<p style="color:var(--vermelho-alerta);font-size:13px">Erro: ${err.message}</p>`;
+    }
+  }
+
+  async function removerPlano(id) {
+    if (!confirmar('Remover este plano?')) return;
+    try {
+      await excluirPlano(id);
+      mostrarToast('Plano removido');
+      await carregarPlanos();
+    } catch (err) {
+      mostrarToast('Erro: ' + err.message, 'erro');
+    }
+  }
+
+  function configurarEventos() {
+    document.getElementById('btnSalvarAcademia').onclick = async () => {
+      const dados = {
+        nome: document.getElementById('acadNome').value.trim(),
+        cnpj: document.getElementById('acadCnpj').value,
+        telefone: document.getElementById('acadTelefone').value,
+        email: document.getElementById('acadEmail').value,
+        endereco: document.getElementById('acadEndereco').value,
+      };
+      if (!dados.nome) { mostrarToast('Informe o nome', 'erro'); return; }
+      const btn = document.getElementById('btnSalvarAcademia');
+      btn.disabled = true; btn.textContent = 'Salvando...';
+      try {
+        await atualizarAcademia(dados);
+        mostrarToast('✅ Dados salvos!');
+        document.getElementById('userName').textContent = dados.nome;
+      } catch (err) {
+        mostrarToast('Erro: ' + err.message, 'erro');
+      } finally {
+        btn.disabled = false; btn.textContent = '💾 Salvar';
+      }
+    };
+
+    document.getElementById('btnAdicionarPlano').onclick = async () => {
+      const nome = document.getElementById('planoNome').value.trim();
+      const duracao = parseInt(document.getElementById('planoDuracao').value);
+      const valor = parseFloat(document.getElementById('planoValor').value);
+      if (!nome || !duracao || !valor) { mostrarToast('Preencha nome, duração e valor', 'erro'); return; }
+      const btn = document.getElementById('btnAdicionarPlano');
+      btn.disabled = true; btn.textContent = 'Salvando...';
+      try {
+        await salvarPlano({ nome, duracao_dias: duracao, valor, descricao: document.getElementById('planoDesc').value });
+        mostrarToast('✅ Plano adicionado!');
+        document.getElementById('planoNome').value = '';
+        document.getElementById('planoDuracao').value = '';
+        document.getElementById('planoValor').value = '';
+        document.getElementById('planoDesc').value = '';
+        await carregarPlanos();
+      } catch (err) {
+        mostrarToast('Erro: ' + err.message, 'erro');
+      } finally {
+        btn.disabled = false; btn.textContent = '+ Adicionar Plano';
+      }
+    };
+
+    document.getElementById('btnAlterarSenha').onclick = async () => {
+      const { createClient } = supabase;
+      const dbAuth = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+      const senha = document.getElementById('novaSenha').value;
+      const confirma = document.getElementById('confirmarSenha').value;
+      const email = document.getElementById('novoEmail').value;
+
+      if (senha && senha !== confirma) { mostrarToast('Senhas não coincidem', 'erro'); return; }
+      if (!senha && !email) { mostrarToast('Informe e-mail ou senha', 'aviso'); return; }
+
+      try {
+        const updates = {};
+        if (email) updates.email = email;
+        if (senha) updates.password = senha;
+        const { error } = await dbAuth.auth.updateUser(updates);
+        if (error) throw error;
+        mostrarToast('✅ Credenciais atualizadas!');
+      } catch (err) {
+        mostrarToast('Erro: ' + err.message, 'erro');
+      }
+    };
+  }
+
+  function configurarMenuMobile() {
+    const btn = document.getElementById('btnMenuMobile');
+    const sidebar = document.getElementById('sidebar');
+    if (!btn) return;
+    btn.addEventListener('click', () => sidebar.classList.toggle('open'));
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GestorFit — Sistema de Gestão para Academias</title>
+  <link rel="icon" href="assets/icons/icon-72.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap">
+  <style>
+    :root {
+      --preto: #0A0A0F;
+      --grafite: #1A1A2E;
+      --verde: #00FF87;
+      --verde-md: #00C96B;
+      --azul: #0066FF;
+      --vermelho: #FF3B5C;
+      --amarelo: #FFD600;
+      --branco: #F8F9FC;
+      --cinza: #8892A4;
+      --font-d: 'Syne', sans-serif;
+      --font-b: 'DM Sans', sans-serif;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--preto); color: var(--branco); font-family: var(--font-b); font-size: 16px; line-height: 1.6; overflow-x: hidden; }
+    h1,h2,h3,h4 { font-family: var(--font-d); line-height: 1.2; }
+    a { color: inherit; text-decoration: none; }
+
+    /* NAV */
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 80px;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(10,10,15,0.85); backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .nav-brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-d); font-size: 22px; font-weight: 800; background: linear-gradient(135deg, var(--verde), var(--azul)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .nav-links { display: flex; gap: 32px; font-size: 14px; color: var(--cinza); }
+    .nav-links a:hover { color: var(--branco); }
+    .nav-cta { background: var(--verde); color: var(--preto); border: none; border-radius: 8px; padding: 10px 24px; font-family: var(--font-d); font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+    .nav-cta:hover { background: #00e87a; transform: translateY(-1px); box-shadow: 0 0 20px rgba(0,255,135,0.3); }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      text-align: center;
+      padding: 120px 80px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      width: 800px; height: 800px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,255,135,0.07) 0%, transparent 70%);
+      top: 50%; left: 50%; transform: translate(-50%,-55%);
+      pointer-events: none;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,102,255,0.06) 0%, transparent 70%);
+      bottom: 0; right: -200px;
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(0,255,135,0.1); border: 1px solid rgba(0,255,135,0.25);
+      border-radius: 20px; padding: 6px 16px; font-size: 13px;
+      color: var(--verde); margin-bottom: 24px;
+      animation: fadeDown 0.6s ease;
+    }
+    .hero h1 {
+      font-size: clamp(40px, 6vw, 72px); font-weight: 800;
+      margin-bottom: 24px;
+      background: linear-gradient(135deg, var(--branco) 60%, var(--verde) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      animation: fadeDown 0.7s ease;
+    }
+    .hero h1 .destaque {
+      background: linear-gradient(135deg, var(--verde), var(--azul));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 20px; color: var(--cinza); max-width: 600px; margin: 0 auto 40px;
+      animation: fadeDown 0.8s ease;
+    }
+    .hero-actions {
+      display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;
+      animation: fadeDown 0.9s ease;
+    }
+    .btn-hero-primary {
+      background: var(--verde); color: var(--preto);
+      border: none; border-radius: 10px;
+      padding: 16px 36px; font-family: var(--font-d); font-weight: 700; font-size: 16px;
+      cursor: pointer; transition: all 0.2s;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-hero-primary:hover { background: #00e87a; box-shadow: 0 0 40px rgba(0,255,135,0.4); transform: translateY(-2px); }
+    .btn-hero-secondary {
+      background: transparent; color: var(--branco);
+      border: 1px solid rgba(255,255,255,0.2); border-radius: 10px;
+      padding: 16px 36px; font-family: var(--font-d); font-size: 16px;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-hero-secondary:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.4); }
+
+    /* PREVIEW */
+    .hero-preview {
+      margin: 80px auto 0; max-width: 900px;
+      background: rgba(26,26,46,0.8); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px; overflow: hidden;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 60px rgba(0,255,135,0.08);
+      animation: fadeUp 1s ease;
+    }
+    .preview-bar {
+      background: #16213E; padding: 10px 16px;
+      display: flex; align-items: center; gap: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .preview-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .preview-dot:nth-child(1) { background: #FF5F57; }
+    .preview-dot:nth-child(2) { background: #FEBC2E; }
+    .preview-dot:nth-child(3) { background: #28C840; }
+    .preview-url {
+      flex: 1; background: rgba(255,255,255,0.05); border-radius: 6px;
+      padding: 4px 12px; font-size: 12px; color: var(--cinza); text-align: center;
+    }
+    .preview-body {
+      padding: 24px;
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+    }
+    .preview-card {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px; padding: 16px;
+    }
+    .preview-card-label { font-size: 11px; color: var(--cinza); margin-bottom: 8px; text-transform: uppercase; }
+    .preview-card-val { font-family: var(--font-d); font-size: 22px; font-weight: 800; }
+    .pc-verde { color: var(--verde); }
+    .pc-azul { color: #4da3ff; }
+    .pc-vermelho { color: var(--vermelho); }
+    .pc-amarelo { color: var(--amarelo); }
+
+    /* STATS */
+    .stats-strip {
+      background: rgba(0,255,135,0.04); border-top: 1px solid rgba(0,255,135,0.15); border-bottom: 1px solid rgba(0,255,135,0.15);
+      padding: 40px 80px;
+      display: flex; justify-content: center; gap: 80px; flex-wrap: wrap;
+    }
+    .stat { text-align: center; }
+    .stat-num { font-family: var(--font-d); font-size: 40px; font-weight: 800; color: var(--verde); }
+    .stat-desc { font-size: 13px; color: var(--cinza); margin-top: 4px; }
+
+    /* FEATURES */
+    section.features { padding: 100px 80px; }
+    .section-tag { color: var(--verde); font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+    .section-title { font-size: clamp(28px, 4vw, 44px); font-weight: 800; margin-bottom: 16px; }
+    .section-sub { font-size: 18px; color: var(--cinza); max-width: 560px; }
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 60px; }
+    .feature-card {
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px; padding: 28px;
+      transition: all 0.3s;
+    }
+    .feature-card:hover { background: rgba(0,255,135,0.05); border-color: rgba(0,255,135,0.2); transform: translateY(-4px); }
+    .feature-icon { font-size: 36px; margin-bottom: 16px; }
+    .feature-card h3 { font-size: 18px; margin-bottom: 8px; }
+    .feature-card p { font-size: 14px; color: var(--cinza); line-height: 1.7; }
+
+    /* HOW IT WORKS */
+    section.how { padding: 100px 80px; background: rgba(26,26,46,0.3); }
+    .steps { display: flex; gap: 32px; margin-top: 60px; flex-wrap: wrap; }
+    .step { flex: 1; min-width: 200px; }
+    .step-num { width: 40px; height: 40px; border-radius: 50%; background: var(--verde); color: var(--preto); font-family: var(--font-d); font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-bottom: 16px; }
+    .step h3 { font-size: 18px; margin-bottom: 8px; }
+    .step p { font-size: 14px; color: var(--cinza); }
+
+    /* PRICING */
+    section.pricing { padding: 100px 80px; }
+    .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 60px; }
+    .pricing-card {
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px; padding: 36px; position: relative;
+    }
+    .pricing-card.destaque {
+      background: rgba(0,255,135,0.06); border-color: rgba(0,255,135,0.3);
+      transform: scale(1.04);
+    }
+    .pricing-tag { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--verde); color: var(--preto); padding: 4px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; font-family: var(--font-d); white-space: nowrap; }
+    .pricing-plan { font-size: 13px; color: var(--cinza); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .pricing-price { font-family: var(--font-d); font-size: 44px; font-weight: 800; margin-bottom: 4px; }
+    .pricing-price span { font-size: 18px; color: var(--cinza); }
+    .pricing-desc { font-size: 14px; color: var(--cinza); margin-bottom: 24px; }
+    .pricing-items { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+    .pricing-items li { font-size: 14px; display: flex; align-items: center; gap: 8px; }
+    .pricing-items li::before { content: '✓'; color: var(--verde); font-weight: 700; }
+    .pricing-items li.off { color: var(--cinza); }
+    .pricing-items li.off::before { content: '✗'; color: rgba(136,146,164,0.4); }
+    .btn-pricing-outline { width: 100%; padding: 12px; background: transparent; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: var(--branco); font-family: var(--font-d); font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+    .btn-pricing-outline:hover { background: rgba(255,255,255,0.06); }
+    .btn-pricing-solid { width: 100%; padding: 12px; background: var(--verde); border: none; border-radius: 8px; color: var(--preto); font-family: var(--font-d); font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+    .btn-pricing-solid:hover { background: #00e87a; box-shadow: 0 0 20px rgba(0,255,135,0.3); }
+
+    /* CTA */
+    section.cta {
+      padding: 100px 80px; text-align: center;
+      background: linear-gradient(135deg, rgba(0,255,135,0.05) 0%, rgba(0,102,255,0.05) 100%);
+      border-top: 1px solid rgba(0,255,135,0.1);
+    }
+    .cta h2 { font-size: clamp(28px, 4vw, 48px); margin-bottom: 16px; }
+    .cta p { font-size: 18px; color: var(--cinza); margin-bottom: 40px; }
+
+    /* FOOTER */
+    footer {
+      padding: 40px 80px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 13px; color: var(--cinza); flex-wrap: wrap; gap: 16px;
+    }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a:hover { color: var(--verde); }
+
+    /* ANIMATIONS */
+    @keyframes fadeDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 900px) {
+      nav { padding: 16px 24px; }
+      .nav-links { display: none; }
+      .hero { padding: 100px 24px 60px; }
+      .stats-strip { padding: 32px 24px; gap: 40px; }
+      section.features, section.how, section.pricing, section.cta { padding: 60px 24px; }
+      .features-grid, .pricing-grid { grid-template-columns: 1fr; }
+      .pricing-card.destaque { transform: none; }
+      .preview-body { grid-template-columns: repeat(2, 1fr); }
+      footer { padding: 24px; flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">💪 GestorFit</div>
+  <div class="nav-links">
+    <a href="#funcionalidades">Funcionalidades</a>
+    <a href="#como-funciona">Como Funciona</a>
+    <a href="#planos">Planos</a>
+  </div>
+  <a href="login.html"><button class="nav-cta">Acessar Sistema →</button></a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div>
+    <div class="hero-badge">🚀 Versão 1.0 disponível agora</div>
+    <h1>Gerencie sua academia com<br><span class="destaque">inteligência e precisão</span></h1>
+    <p>Controle alunos, pagamentos, inadimplência e relatórios financeiros em uma única plataforma simples e poderosa.</p>
+    <div class="hero-actions">
+      <a href="login.html"><button class="btn-hero-primary">🎯 Começar Grátis</button></a>
+      <a href="#funcionalidades"><button class="btn-hero-secondary">Ver funcionalidades ↓</button></a>
+    </div>
+
+    <!-- Preview mockup -->
+    <div class="hero-preview">
+      <div class="preview-bar">
+        <div class="preview-dot"></div>
+        <div class="preview-dot"></div>
+        <div class="preview-dot"></div>
+        <div class="preview-url">gestorfit.com.br/dashboard</div>
+      </div>
+      <div class="preview-body">
+        <div class="preview-card">
+          <div class="preview-card-label">Alunos Ativos</div>
+          <div class="preview-card-val pc-verde">248</div>
+        </div>
+        <div class="preview-card">
+          <div class="preview-card-label">Receita do Mês</div>
+          <div class="preview-card-val pc-azul">R$ 18.4k</div>
+        </div>
+        <div class="preview-card">
+          <div class="preview-card-label">Inadimplentes</div>
+          <div class="preview-card-val pc-vermelho">12</div>
+        </div>
+        <div class="preview-card">
+          <div class="preview-card-label">Vencem em 7d</div>
+          <div class="preview-card-val pc-amarelo">31</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-strip">
+  <div class="stat">
+    <div class="stat-num">500+</div>
+    <div class="stat-desc">Academias cadastradas</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">50k+</div>
+    <div class="stat-desc">Alunos gerenciados</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">R$2M+</div>
+    <div class="stat-desc">Processados por mês</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">99.9%</div>
+    <div class="stat-desc">Uptime garantido</div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="features" id="funcionalidades">
+  <div class="section-tag">✦ Funcionalidades</div>
+  <h2 class="section-title">Tudo que sua academia precisa,<br>em um só lugar</h2>
+  <p class="section-sub">Do cadastro de alunos à geração de recibos em PDF, cobrimos todo o fluxo financeiro da sua academia.</p>
+
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">👥</div>
+      <h3>Gestão de Alunos</h3>
+      <p>Cadastro completo com dados pessoais, plano, vencimento e histórico. Busca e filtros avançados para encontrar qualquer aluno em segundos.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">💰</div>
+      <h3>Controle de Pagamentos</h3>
+      <p>Registre pagamentos com PIX, dinheiro, débito ou crédito. Vencimento atualizado automaticamente após cada pagamento.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⚠️</div>
+      <h3>Gestão de Inadimplência</h3>
+      <p>Alunos marcados automaticamente como inadimplentes quando vencem. Relatório rápido com valor total em aberto.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📄</div>
+      <h3>Relatórios em PDF</h3>
+      <p>Relatório financeiro mensal e recibos individuais em PDF com código de verificação de autenticidade.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔍</div>
+      <h3>Verificação de Recibos</h3>
+      <p>Página pública para verificar autenticidade de recibos pelo código. Transparência total para seus alunos.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📱</div>
+      <h3>PWA — Instale no Celular</h3>
+      <p>Funciona como app nativo no celular e desktop. Instale direto do navegador, sem passar pela loja de apps.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="como-funciona">
+  <div class="section-tag">✦ Como Funciona</div>
+  <h2 class="section-title">Configurado em minutos</h2>
+  <p class="section-sub">Sem complexidade. Comece a usar em 3 passos simples.</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <h3>Crie sua conta</h3>
+      <p>Cadastre os dados da sua academia e defina os planos de matrícula com valores e duração personalizados.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <h3>Cadastre seus alunos</h3>
+      <p>Importe ou cadastre um a um. O sistema calcula automaticamente a data de vencimento com base no plano.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <h3>Gerencie no dia a dia</h3>
+      <p>Registre pagamentos, acompanhe inadimplentes e gere relatórios mensais com um clique.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="planos">
+  <div style="text-align:center">
+    <div class="section-tag">✦ Planos</div>
+    <h2 class="section-title">Preço simples e transparente</h2>
+    <p class="section-sub" style="margin:0 auto">Sem taxa de setup. Cancele quando quiser.</p>
+  </div>
+
+  <div class="pricing-grid">
+    <div class="pricing-card">
+      <div class="pricing-plan">Basic</div>
+      <div class="pricing-price">R$ 49<span>/mês</span></div>
+      <div class="pricing-desc">Ideal para academias pequenas começando a organizar</div>
+      <ul class="pricing-items">
+        <li>Até 100 alunos</li>
+        <li>Controle de pagamentos</li>
+        <li>Relatórios em PDF</li>
+        <li>Verificação de recibos</li>
+        <li class="off">WhatsApp automático</li>
+        <li class="off">Multi-usuário</li>
+      </ul>
+      <a href="login.html"><button class="btn-pricing-outline">Começar Grátis</button></a>
+    </div>
+
+    <div class="pricing-card destaque">
+      <div class="pricing-tag">⭐ Mais Popular</div>
+      <div class="pricing-plan">Pro</div>
+      <div class="pricing-price">R$ 89<span>/mês</span></div>
+      <div class="pricing-desc">Para academias que querem automatizar a operação</div>
+      <ul class="pricing-items">
+        <li>Alunos ilimitados</li>
+        <li>Controle de pagamentos</li>
+        <li>Relatórios em PDF</li>
+        <li>Verificação de recibos</li>
+        <li>WhatsApp automático</li>
+        <li class="off">Multi-usuário</li>
+      </ul>
+      <a href="login.html"><button class="btn-pricing-solid">Começar Grátis</button></a>
+    </div>
+
+    <div class="pricing-card">
+      <div class="pricing-plan">Premium</div>
+      <div class="pricing-price">R$ 149<span>/mês</span></div>
+      <div class="pricing-desc">Para redes e grupos com múltiplas unidades</div>
+      <ul class="pricing-items">
+        <li>Alunos ilimitados</li>
+        <li>Controle de pagamentos</li>
+        <li>Relatórios em PDF</li>
+        <li>Verificação de recibos</li>
+        <li>WhatsApp automático</li>
+        <li>Multi-usuário (5 acessos)</li>
+      </ul>
+      <a href="login.html"><button class="btn-pricing-outline">Falar com Vendas</button></a>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+  <h2>Pronto para organizar<br>sua academia?</h2>
+  <p>Comece grátis hoje. Não precisa de cartão de crédito.</p>
+  <a href="login.html"><button class="btn-hero-primary" style="font-size:18px;padding:18px 48px">🚀 Criar Conta Grátis</button></a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;background:linear-gradient(135deg,#00FF87,#0066FF);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">💪 GestorFit</div>
+  <div class="footer-links">
+    <a href="login.html">Acessar</a>
+    <a href="pages/verificar.html">Verificar Recibo</a>
+  </div>
+  <div>© 2025 GestorFit · Todos os direitos reservados</div>
+</footer>
+
+</body>
+</html>

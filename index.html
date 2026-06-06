@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GestorFit — Dashboard</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="assets/icons/icon-72.png">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+<div class="app-layout">
+
+  <!-- Sidebar -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">💪</span>
+      <span class="logo-text">GestorFit</span>
+    </div>
+    <ul class="nav-menu">
+      <li class="nav-item active" data-page="dashboard"><span class="nav-icon">📊</span><span>Dashboard</span></li>
+      <li class="nav-item" data-page="alunos"><span class="nav-icon">👥</span><span>Alunos</span></li>
+      <li class="nav-item" data-page="pagamentos"><span class="nav-icon">💰</span><span>Pagamentos</span></li>
+      <li class="nav-item" data-page="relatorios"><span class="nav-icon">📄</span><span>Relatórios</span></li>
+      <li class="nav-item" data-page="configuracoes"><span class="nav-icon">⚙️</span><span>Configurações</span></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="userAvatar">A</div>
+        <div class="user-details">
+          <span class="user-name" id="userName">Academia</span>
+          <span class="user-plan">Plano Pro</span>
+        </div>
+      </div>
+      <button class="btn-logout" id="btnLogout">Sair</button>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <main class="main-content">
+    <header class="top-header">
+      <button class="btn-menu-mobile" id="btnMenuMobile">☰</button>
+      <div class="header-title">
+        <h1 id="pageTitle">Dashboard</h1>
+        <span id="pageDate" class="page-date"></span>
+      </div>
+      <div class="header-actions">
+        <button class="btn-primary" id="btnNovoAluno">+ Novo Aluno</button>
+        <button class="btn-icon" id="btnNotificacoes">🔔 <span class="badge" id="badgeVencimentos">0</span></button>
+      </div>
+    </header>
+
+    <div class="page-content">
+
+      <!-- Métricas -->
+      <section class="metrics-grid" id="metricsGrid">
+        <div class="metric-card verde">
+          <div class="metric-icon">👥</div>
+          <div class="metric-info">
+            <span class="metric-label">Alunos Ativos</span>
+            <span class="metric-value" id="totalAtivos">--</span>
+          </div>
+          <div class="metric-trend" id="trendAtivos"></div>
+        </div>
+        <div class="metric-card azul">
+          <div class="metric-icon">💰</div>
+          <div class="metric-info">
+            <span class="metric-label">Receita do Mês</span>
+            <span class="metric-value" id="receitaMes">--</span>
+          </div>
+        </div>
+        <div class="metric-card vermelho">
+          <div class="metric-icon">⚠️</div>
+          <div class="metric-info">
+            <span class="metric-label">Inadimplentes</span>
+            <span class="metric-value" id="totalInadimplentes">--</span>
+          </div>
+          <div class="metric-sub" id="valorInadimplente"></div>
+        </div>
+        <div class="metric-card amarelo">
+          <div class="metric-icon">📅</div>
+          <div class="metric-info">
+            <span class="metric-label">Vencem em 7 dias</span>
+            <span class="metric-value" id="vencemHoje">--</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Gráfico -->
+      <section class="charts-grid">
+        <div class="chart-card">
+          <h3>📈 Receita dos Últimos 6 Meses</h3>
+          <div class="chart-container">
+            <canvas id="graficoReceita"></canvas>
+          </div>
+        </div>
+        <div class="chart-card" id="cardProximosVenc">
+          <h3>⚡ Vencimentos Próximos</h3>
+          <div style="font-size:13px;color:var(--cinza-texto);margin-top:4px;margin-bottom:12px;">Próximos 7 dias</div>
+          <div id="tabelaVencimentos"><div class="loading-state"><div class="spinner"></div></div></div>
+        </div>
+      </section>
+
+      <!-- Tabelas -->
+      <section class="tables-grid">
+        <div class="table-card" style="grid-column:1/-1">
+          <div class="table-header">
+            <h3>✅ Últimos Pagamentos</h3>
+            <a href="pages/pagamentos.html" class="link-ver-todos">Ver todos →</a>
+          </div>
+          <div class="table-body" id="tabelaUltimosPagamentos">
+            <div class="loading-state"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- Modal Novo Aluno -->
+<div class="modal-overlay" id="modalNovoAluno">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Novo Aluno</h2>
+      <button class="btn-close" id="fecharModal">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Nome completo *</label>
+          <input type="text" id="alunoNome" placeholder="Nome do aluno">
+        </div>
+        <div class="form-group">
+          <label>CPF</label>
+          <input type="text" id="alunoCpf" placeholder="000.000.000-00">
+        </div>
+        <div class="form-group">
+          <label>WhatsApp *</label>
+          <input type="tel" id="alunoWhatsapp" placeholder="(77) 99999-9999">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="alunoEmail" placeholder="email@exemplo.com">
+        </div>
+        <div class="form-group">
+          <label>Data de Nascimento</label>
+          <input type="date" id="alunoNascimento">
+        </div>
+        <div class="form-group">
+          <label>Plano *</label>
+          <select id="alunoPlano">
+            <option value="">Selecione o plano</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Data de Início *</label>
+          <input type="date" id="alunoInicio">
+        </div>
+        <div class="form-group">
+          <label>Observações</label>
+          <textarea id="alunoObs" rows="2" placeholder="Opcional"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" id="cancelarModal">Cancelar</button>
+      <button class="btn-primary" id="salvarAluno">Salvar Aluno</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Pagamento -->
+<div class="modal-overlay" id="modalPagamento">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Registrar Pagamento</h2>
+      <button class="btn-close" id="fecharModalPag">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="alunoInfoPagamento"></div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Valor *</label>
+          <input type="number" id="pagValor" step="0.01" placeholder="0,00">
+        </div>
+        <div class="form-group">
+          <label>Data do Pagamento *</label>
+          <input type="date" id="pagData">
+        </div>
+        <div class="form-group">
+          <label>Forma de Pagamento *</label>
+          <select id="pagForma">
+            <option value="pix">PIX</option>
+            <option value="dinheiro">Dinheiro</option>
+            <option value="cartao_credito">Cartão Crédito</option>
+            <option value="cartao_debito">Cartão Débito</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Referência (mês/ano)</label>
+          <input type="month" id="pagReferencia">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" id="cancelarModalPag">Cancelar</button>
+      <button class="btn-primary" id="confirmarPagamento">✅ Confirmar Pagamento</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/supabase.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/relatorios.js"></script>
+<script src="js/dashboard.js"></script>
+<script>
+  // Atualiza o card de vencimentos na seção de gráficos
+  const origRender = window.renderizarVencimentos;
+</script>
+</body>
+</html>

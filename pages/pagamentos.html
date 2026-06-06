@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GestorFit — Pagamentos</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+<div class="app-layout">
+
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">💪</span>
+      <span class="logo-text">GestorFit</span>
+    </div>
+    <ul class="nav-menu">
+      <li class="nav-item" onclick="location.href='../index.html'"><span class="nav-icon">📊</span><span>Dashboard</span></li>
+      <li class="nav-item" onclick="location.href='alunos.html'"><span class="nav-icon">👥</span><span>Alunos</span></li>
+      <li class="nav-item active"><span class="nav-icon">💰</span><span>Pagamentos</span></li>
+      <li class="nav-item" onclick="location.href='relatorios.html'"><span class="nav-icon">📄</span><span>Relatórios</span></li>
+      <li class="nav-item" onclick="location.href='configuracoes.html'"><span class="nav-icon">⚙️</span><span>Configurações</span></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="userAvatar">A</div>
+        <div class="user-details">
+          <span class="user-name" id="userName">Academia</span>
+          <span class="user-plan">Plano Pro</span>
+        </div>
+      </div>
+      <button class="btn-logout" id="btnLogout">Sair</button>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <header class="top-header">
+      <button class="btn-menu-mobile" id="btnMenuMobile">☰</button>
+      <div class="header-title">
+        <h1>Pagamentos</h1>
+        <span class="page-date" id="resumoPag"></span>
+      </div>
+      <div class="header-actions">
+        <button class="btn-primary" id="btnNovoPagamento">+ Registrar</button>
+      </div>
+    </header>
+
+    <div class="page-content">
+
+      <!-- Filtros -->
+      <div class="filter-bar">
+        <input type="month" id="filtroMes" style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-sm);padding:9px 14px;color:var(--branco);font-family:var(--font-body);font-size:13px;outline:none;">
+        <select id="filtroForma" style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-sm);padding:9px 14px;color:var(--branco);font-family:var(--font-body);font-size:13px;outline:none;">
+          <option value="">Todas as formas</option>
+          <option value="pix">PIX</option>
+          <option value="dinheiro">Dinheiro</option>
+          <option value="cartao_credito">Cartão Crédito</option>
+          <option value="cartao_debito">Cartão Débito</option>
+        </select>
+        <select id="filtroStatusPag" style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-sm);padding:9px 14px;color:var(--branco);font-family:var(--font-body);font-size:13px;outline:none;">
+          <option value="">Todos os status</option>
+          <option value="pago">Pago</option>
+          <option value="pendente">Pendente</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+        <span class="filter-spacer"></span>
+        <button class="btn-secondary" id="btnFiltrar">Filtrar</button>
+      </div>
+
+      <!-- Tabela -->
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Aluno</th>
+              <th>Referência</th>
+              <th>Data</th>
+              <th>Forma</th>
+              <th>Valor</th>
+              <th>Status</th>
+              <th>Código</th>
+              <th style="text-align:right">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaPagamentos">
+            <tr><td colspan="8"><div class="loading-state"><div class="spinner"></div></div></td></tr>
+          </tbody>
+        </table>
+        <div class="pagination" id="paginacao" style="display:none">
+          <span class="pagination-info" id="paginacaoInfo"></span>
+          <div class="pagination-buttons" id="paginacaoBtns"></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- Modal Novo Pagamento -->
+<div class="modal-overlay" id="modalPagamento">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Registrar Pagamento</h2>
+      <button class="btn-close" id="fecharModalPag">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group" style="margin-bottom:16px">
+        <label>Aluno *</label>
+        <select id="pagAluno">
+          <option value="">Selecione o aluno</option>
+        </select>
+      </div>
+      <div id="alunoInfoPagamento"></div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Valor *</label>
+          <input type="number" id="pagValor" step="0.01" placeholder="0,00">
+        </div>
+        <div class="form-group">
+          <label>Data do Pagamento *</label>
+          <input type="date" id="pagData">
+        </div>
+        <div class="form-group">
+          <label>Forma de Pagamento *</label>
+          <select id="pagForma">
+            <option value="pix">PIX</option>
+            <option value="dinheiro">Dinheiro</option>
+            <option value="cartao_credito">Cartão Crédito</option>
+            <option value="cartao_debito">Cartão Débito</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Referência (mês/ano)</label>
+          <input type="month" id="pagReferencia">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" id="cancelarModalPag">Cancelar</button>
+      <button class="btn-primary" id="confirmarPagamento">✅ Confirmar Pagamento</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/config.js"></script>
+<script src="../js/supabase.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/relatorios.js"></script>
+<script>
+  let todosPagamentos = [];
+  let todosAlunos = [];
+  const PER_PAGE = 20;
+  let paginaAtual = 1;
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const ok = await verificarAuth();
+    if (!ok) return;
+
+    // Mês padrão = atual
+    document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
+
+    await Promise.all([carregarAlunos(), carregarPagamentos()]);
+    configurarEventos();
+    configurarMenuMobile();
+  });
+
+  async function carregarAlunos() {
+    todosAlunos = await buscarAlunos();
+    const sel = document.getElementById('pagAluno');
+    sel.innerHTML = '<option value="">Selecione o aluno</option>' +
+      todosAlunos.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
+  }
+
+  async function carregarPagamentos() {
+    const tbody = document.getElementById('tabelaPagamentos');
+    tbody.innerHTML = '<tr><td colspan="8"><div class="loading-state"><div class="spinner"></div></div></td></tr>';
+    try {
+      const filtros = {
+        mes: document.getElementById('filtroMes').value || undefined,
+        status: document.getElementById('filtroStatusPag').value || undefined,
+      };
+      todosPagamentos = await buscarPagamentos(filtros);
+
+      // filtro forma no cliente
+      const forma = document.getElementById('filtroForma').value;
+      if (forma) todosPagamentos = todosPagamentos.filter(p => p.forma_pagamento === forma);
+
+      const total = todosPagamentos.reduce((s, p) => s + parseFloat(p.valor), 0);
+      document.getElementById('resumoPag').textContent =
+        `${todosPagamentos.length} registro(s) · Total: ${formatarMoeda(total)}`;
+
+      renderizarTabela();
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="8" class="empty-state">Erro: ${err.message}</td></tr>`;
+    }
+  }
+
+  function renderizarTabela() {
+    const lista = todosPagamentos;
+    const total = lista.length;
+    const inicio = (paginaAtual - 1) * PER_PAGE;
+    const pagina = lista.slice(inicio, inicio + PER_PAGE);
+    const tbody = document.getElementById('tabelaPagamentos');
+
+    if (!pagina.length) {
+      tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">Nenhum pagamento encontrado</div></td></tr>';
+      document.getElementById('paginacao').style.display = 'none';
+      return;
+    }
+
+    const statusBadge = s => {
+      if (s === 'pago') return '<span class="badge-status verde">Pago</span>';
+      if (s === 'pendente') return '<span class="badge-status amarelo">Pendente</span>';
+      return '<span class="badge-status cinza">Cancelado</span>';
+    };
+
+    tbody.innerHTML = pagina.map(p => `
+      <tr>
+        <td style="font-weight:600">${p.alunos?.nome || '--'}</td>
+        <td>${p.referencia_mes || '--'}</td>
+        <td>${formatarData(p.data_pagamento)}</td>
+        <td>${getFormaPagamentoBadge(p.forma_pagamento)}</td>
+        <td style="font-family:var(--font-display);color:var(--verde-neon);font-weight:700">${formatarMoeda(p.valor)}</td>
+        <td>${statusBadge(p.status)}</td>
+        <td style="font-size:12px;color:var(--cinza-texto)">${p.codigo_verificacao || '--'}</td>
+        <td>
+          <div class="actions">
+            <button class="btn-edit" onclick="gerarReciboItem('${p.id}')">🧾 Recibo</button>
+          </div>
+        </td>
+      </tr>`).join('');
+
+    const totalPaginas = Math.ceil(total / PER_PAGE);
+    const pag = document.getElementById('paginacao');
+    pag.style.display = total > PER_PAGE ? 'flex' : 'none';
+    document.getElementById('paginacaoInfo').textContent =
+      `${inicio + 1}–${Math.min(inicio + PER_PAGE, total)} de ${total}`;
+    const btns = document.getElementById('paginacaoBtns');
+    btns.innerHTML =
+      `<button class="btn-page" onclick="irPagina(${paginaAtual - 1})" ${paginaAtual === 1 ? 'disabled' : ''}>‹</button>` +
+      Array.from({ length: totalPaginas }, (_, i) =>
+        `<button class="btn-page ${i + 1 === paginaAtual ? 'active' : ''}" onclick="irPagina(${i + 1})">${i + 1}</button>`
+      ).join('') +
+      `<button class="btn-page" onclick="irPagina(${paginaAtual + 1})" ${paginaAtual === totalPaginas ? 'disabled' : ''}>›</button>`;
+  }
+
+  function irPagina(p) {
+    const total = Math.ceil(todosPagamentos.length / PER_PAGE);
+    if (p < 1 || p > total) return;
+    paginaAtual = p;
+    renderizarTabela();
+  }
+
+  function gerarReciboItem(pagId) {
+    const p = todosPagamentos.find(x => x.id === pagId);
+    if (!p) return;
+    const aluno = todosAlunos.find(a => a.id === p.aluno_id);
+    if (!aluno) return;
+    gerarReciboPDF(p, aluno);
+  }
+
+  let alunoAtualPagamento = null;
+
+  function configurarEventos() {
+    document.getElementById('btnNovoPagamento').onclick = () => {
+      alunoAtualPagamento = null;
+      document.getElementById('pagAluno').value = '';
+      document.getElementById('alunoInfoPagamento').innerHTML = '';
+      document.getElementById('pagValor').value = '';
+      document.getElementById('pagData').value = new Date().toISOString().split('T')[0];
+      document.getElementById('pagReferencia').value = new Date().toISOString().slice(0, 7);
+      document.getElementById('modalPagamento').classList.add('active');
+    };
+
+    document.getElementById('pagAluno').onchange = function() {
+      const aluno = todosAlunos.find(a => a.id === this.value);
+      if (aluno) {
+        alunoAtualPagamento = aluno;
+        document.getElementById('alunoInfoPagamento').innerHTML = `
+          <div class="aluno-card-mini">
+            <strong>${aluno.nome}</strong>
+            <span>${aluno.planos_academia?.nome} — ${formatarMoeda(aluno.planos_academia?.valor)}</span>
+          </div>`;
+        document.getElementById('pagValor').value = aluno.planos_academia?.valor || '';
+      }
+    };
+
+    document.getElementById('fecharModalPag').onclick = fecharModalPag;
+    document.getElementById('cancelarModalPag').onclick = fecharModalPag;
+    document.getElementById('confirmarPagamento').onclick = handlePagamento;
+    document.getElementById('btnFiltrar').onclick = () => { paginaAtual = 1; carregarPagamentos(); };
+    document.getElementById('modalPagamento').onclick = e => { if (e.target.id === 'modalPagamento') fecharModalPag(); };
+  }
+
+  function fecharModalPag() {
+    document.getElementById('modalPagamento').classList.remove('active');
+    alunoAtualPagamento = null;
+  }
+
+  async function handlePagamento() {
+    if (!alunoAtualPagamento) {
+      mostrarToast('Selecione um aluno', 'erro');
+      return;
+    }
+    const dados = {
+      aluno_id: alunoAtualPagamento.id,
+      valor: parseFloat(document.getElementById('pagValor').value),
+      data_pagamento: document.getElementById('pagData').value,
+      data_vencimento: alunoAtualPagamento.data_vencimento,
+      forma_pagamento: document.getElementById('pagForma').value,
+      referencia_mes: document.getElementById('pagReferencia').value,
+      status: 'pago',
+      plano_duracao_dias: alunoAtualPagamento.planos_academia?.duracao_dias,
+    };
+    const btn = document.getElementById('confirmarPagamento');
+    btn.disabled = true; btn.textContent = 'Processando...';
+    try {
+      const pagamento = await registrarPagamento(dados);
+      mostrarToast('✅ Pagamento registrado!');
+      fecharModalPag();
+      await carregarPagamentos();
+      if (confirm('Gerar recibo em PDF?')) gerarReciboPDF(pagamento, alunoAtualPagamento);
+    } catch (err) {
+      mostrarToast('Erro: ' + err.message, 'erro');
+    } finally {
+      btn.disabled = false; btn.textContent = '✅ Confirmar Pagamento';
+    }
+  }
+
+  function configurarMenuMobile() {
+    const btn = document.getElementById('btnMenuMobile');
+    const sidebar = document.getElementById('sidebar');
+    if (!btn) return;
+    btn.addEventListener('click', () => sidebar.classList.toggle('open'));
+  }
+</script>
+</body>
+</html>

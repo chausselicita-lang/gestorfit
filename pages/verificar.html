@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GestorFit — Verificar Recibo</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="verify-page">
+  <div class="verify-card">
+
+    <div class="verify-logo">
+      <span>💪 GestorFit</span>
+    </div>
+
+    <h2>Verificar Autenticidade</h2>
+    <p class="subtitle">Digite o código de verificação do recibo para confirmar se é válido</p>
+
+    <div class="verify-input-group">
+      <input type="text" id="codigoInput" placeholder="GF-XXXXXXXX" maxlength="12">
+      <button class="btn-primary" id="btnVerificar">Verificar</button>
+    </div>
+
+    <div id="resultadoVerificacao" class="verify-result"></div>
+
+    <div style="margin-top:var(--gap-lg);padding-top:var(--gap-md);border-top:1px solid var(--card-border)">
+      <p style="font-size:13px;color:var(--cinza-texto)">
+        Este serviço permite verificar a autenticidade de recibos emitidos pelo GestorFit.<br>
+        O código consta no rodapé do recibo PDF.
+      </p>
+    </div>
+
+  </div>
+</div>
+
+<script src="../js/config.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+  const { createClient } = supabase;
+  const db = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+
+  // Verificar código na URL: /verificar.html?codigo=GF-XXXXXXXX
+  const params = new URLSearchParams(window.location.search);
+  const codigoUrl = params.get('codigo');
+  if (codigoUrl) {
+    document.getElementById('codigoInput').value = codigoUrl.toUpperCase();
+    verificar();
+  }
+
+  document.getElementById('btnVerificar').onclick = verificar;
+  document.getElementById('codigoInput').onkeydown = e => { if (e.key === 'Enter') verificar(); };
+
+  async function verificar() {
+    const codigo = document.getElementById('codigoInput').value.trim().toUpperCase();
+    if (!codigo || codigo.length < 5) {
+      mostrarErro('Digite um código válido (ex: GF-XXXXXXXX)');
+      return;
+    }
+
+    const btn = document.getElementById('btnVerificar');
+    btn.disabled = true; btn.textContent = '...';
+
+    try {
+      const { data } = await db.from('pagamentos')
+        .select('*, alunos(nome, cpf)')
+        .eq('codigo_verificacao', codigo)
+        .single();
+
+      if (!data) {
+        mostrarErro('Código não encontrado. Verifique e tente novamente.');
+        return;
+      }
+
+      mostrarSucesso(data);
+    } catch {
+      mostrarErro('Código não encontrado ou inválido.');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Verificar';
+    }
+  }
+
+  function mostrarSucesso(p) {
+    const el = document.getElementById('resultadoVerificacao');
+    el.className = 'verify-result show';
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <span style="font-size:28px">✅</span>
+        <div>
+          <div style="font-weight:700;font-size:16px;color:var(--verde-neon)">Recibo Autêntico</div>
+          <div style="font-size:13px;color:var(--cinza-texto)">Este recibo foi emitido pelo GestorFit e é válido</div>
+        </div>
+      </div>
+      <div class="verify-item"><span>Aluno</span><strong>${p.alunos?.nome || '--'}</strong></div>
+      <div class="verify-item"><span>CPF</span><strong>${p.alunos?.cpf || 'Não informado'}</strong></div>
+      <div class="verify-item"><span>Valor Pago</span><strong style="color:var(--verde-neon)">${formatarMoeda(p.valor)}</strong></div>
+      <div class="verify-item"><span>Data do Pagamento</span><strong>${formatarData(p.data_pagamento)}</strong></div>
+      <div class="verify-item"><span>Forma de Pagamento</span><strong>${getFormaPagamentoBadge(p.forma_pagamento)}</strong></div>
+      <div class="verify-item"><span>Referência</span><strong>${p.referencia_mes || '--'}</strong></div>
+      <div class="verify-item"><span>Status</span><strong style="color:var(--verde-neon)">✅ Pago</strong></div>
+      <div class="verify-item"><span>Código de Verificação</span><strong style="font-family:monospace">${p.codigo_verificacao}</strong></div>
+    `;
+  }
+
+  function mostrarErro(msg) {
+    const el = document.getElementById('resultadoVerificacao');
+    el.className = 'verify-result show erro';
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:28px">❌</span>
+        <div>
+          <div style="font-weight:700;color:var(--vermelho-alerta)">Recibo não encontrado</div>
+          <div style="font-size:13px;color:var(--cinza-texto)">${msg}</div>
+        </div>
+      </div>`;
+  }
+
+  function getFormaPagamentoBadge(forma) {
+    const icones = { pix: '🟢 PIX', dinheiro: '💵 Dinheiro', cartao_credito: '💳 Crédito', cartao_debito: '💳 Débito' };
+    return icones[forma] || forma;
+  }
+</script>
+</body>
+</html>

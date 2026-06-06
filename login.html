@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GestorFit — Entrar</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="assets/icons/icon-72.png">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="login-page">
+
+  <!-- Lado esquerdo — branding -->
+  <div class="login-left">
+    <div class="login-brand">
+      <span class="login-brand-icon">💪</span>
+      <h1>GestorFit</h1>
+      <p>Sistema completo para gestão de academias modernas</p>
+    </div>
+
+    <div class="login-features">
+      <div class="login-feature">
+        <div class="login-feature-icon">👥</div>
+        <span>Controle total de alunos e matrículas</span>
+      </div>
+      <div class="login-feature">
+        <div class="login-feature-icon">💰</div>
+        <span>Gestão de pagamentos e inadimplência</span>
+      </div>
+      <div class="login-feature">
+        <div class="login-feature-icon">📊</div>
+        <span>Relatórios financeiros em PDF</span>
+      </div>
+      <div class="login-feature">
+        <div class="login-feature-icon">📱</div>
+        <span>PWA — instale no celular ou desktop</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lado direito — formulário -->
+  <div class="login-right">
+    <div class="login-form-box">
+      <h2>Bem-vindo de volta</h2>
+      <p class="subtitle">Entre na sua conta para gerenciar sua academia</p>
+
+      <form class="login-form" id="loginForm" onsubmit="return false;">
+        <div class="form-group">
+          <label>E-mail</label>
+          <input type="email" id="loginEmail" placeholder="seu@email.com" autocomplete="email" required>
+        </div>
+        <div class="form-group">
+          <label>Senha</label>
+          <input type="password" id="loginSenha" placeholder="••••••••" autocomplete="current-password" required>
+        </div>
+
+        <button type="submit" class="btn-login" id="btnEntrar">
+          <span id="btnEntrarText">Entrar</span>
+        </button>
+      </form>
+
+      <div class="login-divider">ou</div>
+
+      <p style="text-align:center;font-size:13px;color:var(--cinza-texto);">
+        Ainda não tem conta? <a href="#" style="color:var(--verde-neon);" onclick="alert('Contate o suporte para criar uma conta.')">Fale conosco</a>
+      </p>
+
+      <div id="loginErro" style="display:none;margin-top:16px;padding:12px;background:rgba(255,59,92,0.1);border:1px solid rgba(255,59,92,0.3);border-radius:8px;color:var(--vermelho-alerta);font-size:14px;"></div>
+
+      <div class="login-footer">
+        GestorFit v1.0 &nbsp;·&nbsp; <a href="pages/verificar.html" style="color:var(--cinza-texto);">Verificar recibo</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/utils.js"></script>
+<script>
+  const { createClient } = supabase;
+  const db = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+
+  // Redirecionar se já logado
+  (async () => {
+    const { data: { user } } = await db.auth.getUser();
+    if (user) window.location.href = 'index.html';
+  })();
+
+  document.getElementById('loginForm').addEventListener('submit', async () => {
+    const email = document.getElementById('loginEmail').value.trim();
+    const senha = document.getElementById('loginSenha').value;
+    const btn = document.getElementById('btnEntrar');
+    const btnText = document.getElementById('btnEntrarText');
+    const erroEl = document.getElementById('loginErro');
+
+    erroEl.style.display = 'none';
+    btn.disabled = true;
+    btnText.textContent = 'Entrando...';
+
+    try {
+      const { error } = await db.auth.signInWithPassword({ email, password: senha });
+      if (error) throw error;
+      window.location.href = 'index.html';
+    } catch (err) {
+      erroEl.style.display = 'block';
+      erroEl.textContent = 'E-mail ou senha incorretos. Tente novamente.';
+      btn.disabled = false;
+      btnText.textContent = 'Entrar';
+    }
+  });
+</script>
+
+</body>
+</html>

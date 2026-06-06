@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GestorFit — Alunos</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+<div class="app-layout">
+
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">💪</span>
+      <span class="logo-text">GestorFit</span>
+    </div>
+    <ul class="nav-menu">
+      <li class="nav-item" onclick="location.href='../index.html'"><span class="nav-icon">📊</span><span>Dashboard</span></li>
+      <li class="nav-item active"><span class="nav-icon">👥</span><span>Alunos</span></li>
+      <li class="nav-item" onclick="location.href='pagamentos.html'"><span class="nav-icon">💰</span><span>Pagamentos</span></li>
+      <li class="nav-item" onclick="location.href='relatorios.html'"><span class="nav-icon">📄</span><span>Relatórios</span></li>
+      <li class="nav-item" onclick="location.href='configuracoes.html'"><span class="nav-icon">⚙️</span><span>Configurações</span></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="userAvatar">A</div>
+        <div class="user-details">
+          <span class="user-name" id="userName">Academia</span>
+          <span class="user-plan">Plano Pro</span>
+        </div>
+      </div>
+      <button class="btn-logout" id="btnLogout">Sair</button>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <header class="top-header">
+      <button class="btn-menu-mobile" id="btnMenuMobile">☰</button>
+      <div class="header-title">
+        <h1>Alunos</h1>
+        <span class="page-date" id="totalAlunos">--</span>
+      </div>
+      <div class="header-actions">
+        <button class="btn-primary" id="btnNovoAluno">+ Novo Aluno</button>
+      </div>
+    </header>
+
+    <div class="page-content">
+
+      <!-- Filtros -->
+      <div class="filter-bar">
+        <div class="search-box">
+          <input type="text" id="searchAluno" placeholder="Buscar aluno...">
+        </div>
+        <select id="filtroStatus">
+          <option value="">Todos os status</option>
+          <option value="ativo">Ativo</option>
+          <option value="inadimplente">Inadimplente</option>
+          <option value="inativo">Inativo</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+        <select id="filtroPlano">
+          <option value="">Todos os planos</option>
+        </select>
+        <span class="filter-spacer"></span>
+      </div>
+
+      <!-- Tabela -->
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Aluno</th>
+              <th>Plano</th>
+              <th>Vencimento</th>
+              <th>Status</th>
+              <th>WhatsApp</th>
+              <th style="text-align:right">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaAlunos">
+            <tr><td colspan="6"><div class="loading-state"><div class="spinner"></div> Carregando...</div></td></tr>
+          </tbody>
+        </table>
+        <div class="pagination" id="paginacaoAlunos" style="display:none">
+          <span class="pagination-info" id="paginacaoInfo"></span>
+          <div class="pagination-buttons" id="paginacaoBtns"></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- Modal Aluno (Novo / Editar) -->
+<div class="modal-overlay" id="modalAluno">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-header">
+      <h2 id="modalAlunoTitulo">Novo Aluno</h2>
+      <button class="btn-close" id="fecharModalAluno">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Nome completo *</label>
+          <input type="text" id="alunoNome" placeholder="Nome do aluno">
+        </div>
+        <div class="form-group">
+          <label>CPF</label>
+          <input type="text" id="alunoCpf" placeholder="000.000.000-00">
+        </div>
+        <div class="form-group">
+          <label>WhatsApp *</label>
+          <input type="tel" id="alunoWhatsapp" placeholder="(77) 99999-9999">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="alunoEmail" placeholder="email@exemplo.com">
+        </div>
+        <div class="form-group">
+          <label>Data de Nascimento</label>
+          <input type="date" id="alunoNascimento">
+        </div>
+        <div class="form-group">
+          <label>Plano *</label>
+          <select id="alunoPlano">
+            <option value="">Selecione o plano</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Data de Início *</label>
+          <input type="date" id="alunoInicio">
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="alunoStatus">
+            <option value="ativo">Ativo</option>
+            <option value="inativo">Inativo</option>
+            <option value="inadimplente">Inadimplente</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>Observações</label>
+          <textarea id="alunoObs" rows="2" placeholder="Opcional"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" id="cancelarModalAluno">Cancelar</button>
+      <button class="btn-primary" id="salvarAluno">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Pagamento -->
+<div class="modal-overlay" id="modalPagamento">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Registrar Pagamento</h2>
+      <button class="btn-close" id="fecharModalPag">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="alunoInfoPagamento"></div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Valor *</label>
+          <input type="number" id="pagValor" step="0.01" placeholder="0,00">
+        </div>
+        <div class="form-group">
+          <label>Data do Pagamento *</label>
+          <input type="date" id="pagData">
+        </div>
+        <div class="form-group">
+          <label>Forma de Pagamento *</label>
+          <select id="pagForma">
+            <option value="pix">PIX</option>
+            <option value="dinheiro">Dinheiro</option>
+            <option value="cartao_credito">Cartão Crédito</option>
+            <option value="cartao_debito">Cartão Débito</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Referência (mês/ano)</label>
+          <input type="month" id="pagReferencia">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" id="cancelarModalPag">Cancelar</button>
+      <button class="btn-primary" id="confirmarPagamento">✅ Confirmar Pagamento</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Ver Aluno -->
+<div class="modal-overlay" id="modalVerAluno">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header">
+      <h2>Detalhes do Aluno</h2>
+      <button class="btn-close" onclick="document.getElementById('modalVerAluno').classList.remove('active')">✕</button>
+    </div>
+    <div class="modal-body" id="verAlunoBody"></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="document.getElementById('modalVerAluno').classList.remove('active')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/config.js"></script>
+<script src="../js/supabase.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/relatorios.js"></script>
+<script>
+  let todosAlunos = [];
+  let alunoEditando = null;
+  let alunoAtualPagamento = null;
+  const PER_PAGE = 15;
+  let paginaAtual = 1;
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const ok = await verificarAuth();
+    if (!ok) return;
+    await carregarPlanosFiltro();
+    await carregarAlunos();
+    configurarEventos();
+    configurarMenuMobile();
+  });
+
+  async function carregarAlunos() {
+    const tbody = document.getElementById('tabelaAlunos');
+    tbody.innerHTML = '<tr><td colspan="6"><div class="loading-state"><div class="spinner"></div></div></td></tr>';
+    try {
+      todosAlunos = await buscarAlunos();
+      document.getElementById('totalAlunos').textContent = `${todosAlunos.length} aluno(s) cadastrado(s)`;
+      renderizarTabela();
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Erro ao carregar: ${err.message}</td></tr>`;
+    }
+  }
+
+  function alunosFiltrados() {
+    const search = document.getElementById('searchAluno').value.toLowerCase();
+    const status = document.getElementById('filtroStatus').value;
+    const plano = document.getElementById('filtroPlano').value;
+    return todosAlunos.filter(a => {
+      if (search && !a.nome.toLowerCase().includes(search)) return false;
+      if (status && a.status !== status) return false;
+      if (plano && a.plano_id !== plano) return false;
+      return true;
+    });
+  }
+
+  function renderizarTabela() {
+    const lista = alunosFiltrados();
+    const total = lista.length;
+    const inicio = (paginaAtual - 1) * PER_PAGE;
+    const pagina = lista.slice(inicio, inicio + PER_PAGE);
+    const tbody = document.getElementById('tabelaAlunos');
+
+    if (!pagina.length) {
+      tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">Nenhum aluno encontrado</div></td></tr>';
+      document.getElementById('paginacaoAlunos').style.display = 'none';
+      return;
+    }
+
+    tbody.innerHTML = pagina.map(a => {
+      const dias = calcularDiasRestantes(a.data_vencimento);
+      const urgencia = dias < 0 ? 'vermelho' : dias <= 3 ? 'amarelo' : '';
+      return `
+        <tr>
+          <td>
+            <div style="font-weight:600">${a.nome}</div>
+            <div style="font-size:12px;color:var(--cinza-texto)">${a.email || a.cpf || '--'}</div>
+          </td>
+          <td>${a.planos_academia?.nome || '--'}</td>
+          <td>
+            <span style="color:${urgencia === 'vermelho' ? 'var(--vermelho-alerta)' : urgencia === 'amarelo' ? 'var(--amarelo-aviso)' : 'inherit'}">
+              ${formatarData(a.data_vencimento)}
+            </span>
+          </td>
+          <td>${getStatusBadge(a.status)}</td>
+          <td>
+            ${a.whatsapp ? `<a href="https://wa.me/55${a.whatsapp.replace(/\D/g,'')}" target="_blank" style="color:var(--verde-neon);font-size:13px;">${a.whatsapp}</a>` : '--'}
+          </td>
+          <td>
+            <div class="actions">
+              <button class="btn-pay" onclick="abrirPagamento('${a.id}')">💰 Pagar</button>
+              <button class="btn-edit" onclick="editarAluno('${a.id}')">✏️</button>
+              <button class="btn-sm-danger" onclick="deletarAluno('${a.id}', '${a.nome.replace(/'/g, "\\'")}')">🗑️</button>
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+
+    // Paginação
+    const totalPaginas = Math.ceil(total / PER_PAGE);
+    const pag = document.getElementById('paginacaoAlunos');
+    pag.style.display = total > PER_PAGE ? 'flex' : 'none';
+    document.getElementById('paginacaoInfo').textContent =
+      `${inicio + 1}–${Math.min(inicio + PER_PAGE, total)} de ${total}`;
+    const btns = document.getElementById('paginacaoBtns');
+    btns.innerHTML =
+      `<button class="btn-page" onclick="irPagina(${paginaAtual - 1})" ${paginaAtual === 1 ? 'disabled' : ''}>‹</button>` +
+      Array.from({ length: totalPaginas }, (_, i) =>
+        `<button class="btn-page ${i + 1 === paginaAtual ? 'active' : ''}" onclick="irPagina(${i + 1})">${i + 1}</button>`
+      ).join('') +
+      `<button class="btn-page" onclick="irPagina(${paginaAtual + 1})" ${paginaAtual === totalPaginas ? 'disabled' : ''}>›</button>`;
+  }
+
+  function irPagina(p) {
+    const total = Math.ceil(alunosFiltrados().length / PER_PAGE);
+    if (p < 1 || p > total) return;
+    paginaAtual = p;
+    renderizarTabela();
+  }
+
+  async function carregarPlanosFiltro() {
+    const planos = await buscarPlanos();
+    const sel = document.getElementById('filtroPlano');
+    planos.forEach(p => {
+      sel.innerHTML += `<option value="${p.id}">${p.nome}</option>`;
+    });
+
+    const selModal = document.getElementById('alunoPlano');
+    planos.forEach(p => {
+      selModal.innerHTML += `<option value="${p.id}" data-duracao="${p.duracao_dias}" data-valor="${p.valor}">${p.nome} — ${formatarMoeda(p.valor)}</option>`;
+    });
+  }
+
+  function configurarEventos() {
+    document.getElementById('btnNovoAluno').onclick = abrirModalNovoAluno;
+    document.getElementById('fecharModalAluno').onclick = fecharModal;
+    document.getElementById('cancelarModalAluno').onclick = fecharModal;
+    document.getElementById('salvarAluno').onclick = handleSalvar;
+
+    document.getElementById('fecharModalPag').onclick = fecharModalPag;
+    document.getElementById('cancelarModalPag').onclick = fecharModalPag;
+    document.getElementById('confirmarPagamento').onclick = handlePagamento;
+
+    document.getElementById('searchAluno').oninput = () => { paginaAtual = 1; renderizarTabela(); };
+    document.getElementById('filtroStatus').onchange = () => { paginaAtual = 1; renderizarTabela(); };
+    document.getElementById('filtroPlano').onchange = () => { paginaAtual = 1; renderizarTabela(); };
+
+    document.getElementById('modalAluno').onclick = e => { if (e.target.id === 'modalAluno') fecharModal(); };
+    document.getElementById('modalPagamento').onclick = e => { if (e.target.id === 'modalPagamento') fecharModalPag(); };
+  }
+
+  function abrirModalNovoAluno() {
+    alunoEditando = null;
+    document.getElementById('modalAlunoTitulo').textContent = 'Novo Aluno';
+    document.getElementById('alunoNome').value = '';
+    document.getElementById('alunoCpf').value = '';
+    document.getElementById('alunoWhatsapp').value = '';
+    document.getElementById('alunoEmail').value = '';
+    document.getElementById('alunoNascimento').value = '';
+    document.getElementById('alunoPlano').value = '';
+    document.getElementById('alunoInicio').value = new Date().toISOString().split('T')[0];
+    document.getElementById('alunoStatus').value = 'ativo';
+    document.getElementById('alunoObs').value = '';
+    document.getElementById('modalAluno').classList.add('active');
+  }
+
+  function fecharModal() {
+    document.getElementById('modalAluno').classList.remove('active');
+    alunoEditando = null;
+  }
+
+  function editarAluno(id) {
+    const a = todosAlunos.find(x => x.id === id);
+    if (!a) return;
+    alunoEditando = a;
+    document.getElementById('modalAlunoTitulo').textContent = 'Editar Aluno';
+    document.getElementById('alunoNome').value = a.nome;
+    document.getElementById('alunoCpf').value = a.cpf || '';
+    document.getElementById('alunoWhatsapp').value = a.whatsapp || '';
+    document.getElementById('alunoEmail').value = a.email || '';
+    document.getElementById('alunoNascimento').value = a.data_nascimento || '';
+    document.getElementById('alunoPlano').value = a.plano_id || '';
+    document.getElementById('alunoInicio').value = a.data_inicio;
+    document.getElementById('alunoStatus').value = a.status;
+    document.getElementById('alunoObs').value = a.observacoes || '';
+    document.getElementById('modalAluno').classList.add('active');
+  }
+
+  async function handleSalvar() {
+    const nome = document.getElementById('alunoNome').value.trim();
+    const whatsapp = document.getElementById('alunoWhatsapp').value.trim();
+    const planoId = document.getElementById('alunoPlano').value;
+    const inicio = document.getElementById('alunoInicio').value;
+
+    if (!nome || !whatsapp || !planoId || !inicio) {
+      mostrarToast('Preencha todos os campos obrigatórios', 'erro');
+      return;
+    }
+
+    const opt = document.querySelector(`#alunoPlano option[value="${planoId}"]`);
+    const duracao = parseInt(opt?.dataset.duracao || 30);
+    const venc = new Date(inicio + 'T00:00:00');
+    venc.setDate(venc.getDate() + duracao);
+
+    const dados = {
+      nome,
+      cpf: document.getElementById('alunoCpf').value,
+      whatsapp,
+      email: document.getElementById('alunoEmail').value,
+      data_nascimento: document.getElementById('alunoNascimento').value || null,
+      plano_id: planoId,
+      data_inicio: inicio,
+      data_vencimento: venc.toISOString().split('T')[0],
+      status: document.getElementById('alunoStatus').value,
+      observacoes: document.getElementById('alunoObs').value,
+    };
+
+    const btn = document.getElementById('salvarAluno');
+    btn.disabled = true; btn.textContent = 'Salvando...';
+
+    try {
+      if (alunoEditando) {
+        await atualizarAluno(alunoEditando.id, dados);
+        mostrarToast('✅ Aluno atualizado!');
+      } else {
+        await salvarAluno(dados);
+        mostrarToast('✅ Aluno cadastrado!');
+      }
+      fecharModal();
+      await carregarAlunos();
+    } catch (err) {
+      mostrarToast('Erro: ' + err.message, 'erro');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Salvar';
+    }
+  }
+
+  async function deletarAluno(id, nome) {
+    if (!confirmar(`Excluir "${nome}"? Esta ação não pode ser desfeita.`)) return;
+    try {
+      await excluirAluno(id);
+      mostrarToast('Aluno excluído');
+      await carregarAlunos();
+    } catch (err) {
+      mostrarToast('Erro: ' + err.message, 'erro');
+    }
+  }
+
+  async function abrirPagamento(alunoId) {
+    alunoAtualPagamento = todosAlunos.find(a => a.id === alunoId);
+    if (!alunoAtualPagamento) return;
+    document.getElementById('alunoInfoPagamento').innerHTML = `
+      <div class="aluno-card-mini">
+        <strong>${alunoAtualPagamento.nome}</strong>
+        <span>${alunoAtualPagamento.planos_academia?.nome} — ${formatarMoeda(alunoAtualPagamento.planos_academia?.valor)}</span>
+      </div>`;
+    document.getElementById('pagValor').value = alunoAtualPagamento.planos_academia?.valor || '';
+    document.getElementById('pagData').value = new Date().toISOString().split('T')[0];
+    document.getElementById('pagReferencia').value = new Date().toISOString().slice(0, 7);
+    document.getElementById('modalPagamento').classList.add('active');
+  }
+
+  function fecharModalPag() {
+    document.getElementById('modalPagamento').classList.remove('active');
+    alunoAtualPagamento = null;
+  }
+
+  async function handlePagamento() {
+    if (!alunoAtualPagamento) return;
+    const dados = {
+      aluno_id: alunoAtualPagamento.id,
+      valor: parseFloat(document.getElementById('pagValor').value),
+      data_pagamento: document.getElementById('pagData').value,
+      data_vencimento: alunoAtualPagamento.data_vencimento,
+      forma_pagamento: document.getElementById('pagForma').value,
+      referencia_mes: document.getElementById('pagReferencia').value,
+      status: 'pago',
+      plano_duracao_dias: alunoAtualPagamento.planos_academia?.duracao_dias,
+    };
+    const btn = document.getElementById('confirmarPagamento');
+    btn.disabled = true; btn.textContent = 'Processando...';
+    try {
+      const pagamento = await registrarPagamento(dados);
+      mostrarToast('✅ Pagamento registrado!');
+      fecharModalPag();
+      await carregarAlunos();
+      if (confirm('Gerar recibo em PDF?')) gerarReciboPDF(pagamento, alunoAtualPagamento);
+    } catch (err) {
+      mostrarToast('Erro: ' + err.message, 'erro');
+    } finally {
+      btn.disabled = false; btn.textContent = '✅ Confirmar Pagamento';
+    }
+  }
+
+  function configurarMenuMobile() {
+    const btn = document.getElementById('btnMenuMobile');
+    const sidebar = document.getElementById('sidebar');
+    if (!btn) return;
+    btn.addEventListener('click', () => sidebar.classList.toggle('open'));
+  }
+</script>
+</body>
+</html>
