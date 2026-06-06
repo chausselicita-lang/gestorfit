@@ -6,29 +6,51 @@
   <title>GestorFit — Dashboard</title>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="assets/icons/icon-72.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/dashboard.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 <body>
 
 <div class="app-layout">
 
-  <!-- Sidebar -->
+  <!-- ── SIDEBAR ── -->
   <nav class="sidebar" id="sidebar">
     <div class="sidebar-logo">
-      <span class="logo-icon">💪</span>
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" stroke-width="2.5"><path d="M6.5 6.5h2v11h-2zM15.5 6.5h2v11h-2z"/><path d="M8.5 11.5h7"/><rect x="2" y="9" width="4.5" height="6" rx="1"/><rect x="17.5" y="9" width="4.5" height="6" rx="1"/></svg>
+      </div>
       <span class="logo-text">GestorFit</span>
     </div>
+
     <ul class="nav-menu">
-      <li class="nav-item active" data-page="dashboard"><span class="nav-icon">📊</span><span>Dashboard</span></li>
-      <li class="nav-item" data-page="alunos"><span class="nav-icon">👥</span><span>Alunos</span></li>
-      <li class="nav-item" data-page="pagamentos"><span class="nav-icon">💰</span><span>Pagamentos</span></li>
-      <li class="nav-item" data-page="relatorios"><span class="nav-icon">📄</span><span>Relatórios</span></li>
-      <li class="nav-item" data-page="configuracoes"><span class="nav-icon">⚙️</span><span>Configurações</span></li>
+      <li class="nav-item active" data-page="dashboard">
+        <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span>
+        <span>Dashboard</span>
+      </li>
+      <li class="nav-item" data-page="alunos">
+        <span class="nav-icon"><i data-lucide="users"></i></span>
+        <span>Alunos</span>
+      </li>
+      <li class="nav-item" data-page="pagamentos">
+        <span class="nav-icon"><i data-lucide="credit-card"></i></span>
+        <span>Pagamentos</span>
+      </li>
+      <li class="nav-item" data-page="relatorios">
+        <span class="nav-icon"><i data-lucide="file-bar-chart"></i></span>
+        <span>Relatórios</span>
+      </li>
+      <li class="nav-item" data-page="configuracoes">
+        <span class="nav-icon"><i data-lucide="settings"></i></span>
+        <span>Configurações</span>
+      </li>
     </ul>
+
     <div class="sidebar-footer">
       <div class="user-info">
         <div class="user-avatar" id="userAvatar">A</div>
@@ -37,104 +59,271 @@
           <span class="user-plan">Plano Pro</span>
         </div>
       </div>
-      <button class="btn-logout" id="btnLogout">Sair</button>
+      <button class="btn-logout" id="btnLogout">
+        <i data-lucide="log-out"></i> Sair
+      </button>
     </div>
   </nav>
 
-  <!-- Main -->
+  <!-- ── NOTIFICATION PANEL ── -->
+  <aside class="notif-panel" id="notifPanel">
+    <div class="notif-panel-header">
+      <h3>Notificações</h3>
+      <div class="notif-panel-actions">
+        <button class="btn-text-sm" id="btnMarcarLidas">Marcar todas lidas</button>
+        <button class="btn-close" id="btnCloseNotif">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+    </div>
+    <div class="notif-list" id="notifList">
+      <div class="loading-state"><div class="spinner"></div></div>
+    </div>
+  </aside>
+
+  <!-- ── PANEL OVERLAY ── -->
+  <div class="panel-overlay" id="panelOverlay"></div>
+
+  <!-- ── MAIN ── -->
   <main class="main-content">
+
+    <!-- Header -->
     <header class="top-header">
-      <button class="btn-menu-mobile" id="btnMenuMobile">☰</button>
+      <button class="btn-menu-mobile" id="btnMenuMobile">
+        <i data-lucide="menu"></i>
+      </button>
       <div class="header-title">
         <h1 id="pageTitle">Dashboard</h1>
         <span id="pageDate" class="page-date"></span>
       </div>
       <div class="header-actions">
-        <button class="btn-primary" id="btnNovoAluno">+ Novo Aluno</button>
-        <button class="btn-icon" id="btnNotificacoes">🔔 <span class="badge" id="badgeVencimentos">0</span></button>
+        <button class="btn-primary" id="btnNovoAluno">
+          <i data-lucide="plus"></i> Novo Aluno
+        </button>
+        <button class="btn-icon" id="btnNotificacoes" title="Notificações">
+          <i data-lucide="bell"></i>
+          <span class="badge" id="badgeVencimentos" style="display:none">0</span>
+        </button>
       </div>
     </header>
 
     <div class="page-content">
 
-      <!-- Métricas -->
-      <section class="metrics-grid" id="metricsGrid">
-        <div class="metric-card verde">
-          <div class="metric-icon">👥</div>
-          <div class="metric-info">
-            <span class="metric-label">Alunos Ativos</span>
-            <span class="metric-value" id="totalAtivos">--</span>
+      <!-- ── KPI ROW ── -->
+      <section class="kpi-grid" id="kpiGrid">
+
+        <!-- Alunos Ativos -->
+        <div class="kpi-card" id="kpiAtivos">
+          <div class="kpi-skeleton" id="skAtivos">
+            <div class="kpi-sk-top">
+              <div class="sk-base kpi-sk-icon"></div>
+              <div class="sk-base kpi-sk-badge"></div>
+            </div>
+            <div class="sk-base kpi-sk-value"></div>
+            <div class="sk-base kpi-sk-label"></div>
           </div>
-          <div class="metric-trend" id="trendAtivos"></div>
-        </div>
-        <div class="metric-card azul">
-          <div class="metric-icon">💰</div>
-          <div class="metric-info">
-            <span class="metric-label">Receita do Mês</span>
-            <span class="metric-value" id="receitaMes">--</span>
-          </div>
-        </div>
-        <div class="metric-card vermelho">
-          <div class="metric-icon">⚠️</div>
-          <div class="metric-info">
-            <span class="metric-label">Inadimplentes</span>
-            <span class="metric-value" id="totalInadimplentes">--</span>
-          </div>
-          <div class="metric-sub" id="valorInadimplente"></div>
-        </div>
-        <div class="metric-card amarelo">
-          <div class="metric-icon">📅</div>
-          <div class="metric-info">
-            <span class="metric-label">Vencem em 7 dias</span>
-            <span class="metric-value" id="vencemHoje">--</span>
+          <div class="kpi-content" id="dataAtivos" style="display:none">
+            <div class="kpi-top">
+              <div class="kpi-icon accent">
+                <i data-lucide="users"></i>
+              </div>
+              <span class="kpi-trend-badge neutral" id="trendAtivos"></span>
+            </div>
+            <div class="kpi-value" id="totalAtivos">0</div>
+            <div class="kpi-label">Alunos Ativos</div>
           </div>
         </div>
+
+        <!-- Receita do Mês -->
+        <div class="kpi-card" id="kpiReceita">
+          <div class="kpi-skeleton" id="skReceita">
+            <div class="kpi-sk-top">
+              <div class="sk-base kpi-sk-icon"></div>
+              <div class="sk-base kpi-sk-badge"></div>
+            </div>
+            <div class="sk-base kpi-sk-value"></div>
+            <div class="sk-base kpi-sk-label"></div>
+          </div>
+          <div class="kpi-content" id="dataReceita" style="display:none">
+            <div class="kpi-top">
+              <div class="kpi-icon success">
+                <i data-lucide="trending-up"></i>
+              </div>
+              <span class="kpi-trend-badge neutral" id="trendReceita"></span>
+            </div>
+            <div class="kpi-value" id="receitaMes">R$ 0</div>
+            <div class="kpi-label">Receita do Mês</div>
+          </div>
+        </div>
+
+        <!-- Inadimplentes -->
+        <div class="kpi-card" id="kpiInadimpl">
+          <div class="kpi-skeleton" id="skInadimpl">
+            <div class="kpi-sk-top">
+              <div class="sk-base kpi-sk-icon"></div>
+              <div class="sk-base kpi-sk-badge"></div>
+            </div>
+            <div class="sk-base kpi-sk-value"></div>
+            <div class="sk-base kpi-sk-label"></div>
+          </div>
+          <div class="kpi-content" id="dataInadimpl" style="display:none">
+            <div class="kpi-top">
+              <div class="kpi-icon danger">
+                <i data-lucide="alert-triangle"></i>
+              </div>
+              <span class="kpi-trend-badge neutral" id="trendInadimpl"></span>
+            </div>
+            <div class="kpi-value" id="totalInadimplentes">0</div>
+            <div class="kpi-label">Inadimplentes</div>
+            <div class="kpi-sub" id="valorInadimplente"></div>
+          </div>
+        </div>
+
+        <!-- Vencimentos 7 dias -->
+        <div class="kpi-card" id="kpiVenc">
+          <div class="kpi-skeleton" id="skVenc">
+            <div class="kpi-sk-top">
+              <div class="sk-base kpi-sk-icon"></div>
+              <div class="sk-base kpi-sk-badge"></div>
+            </div>
+            <div class="sk-base kpi-sk-value"></div>
+            <div class="sk-base kpi-sk-label"></div>
+          </div>
+          <div class="kpi-content" id="dataVenc" style="display:none">
+            <div class="kpi-top">
+              <div class="kpi-icon warning">
+                <i data-lucide="calendar-clock"></i>
+              </div>
+              <span class="kpi-trend-badge neutral" id="trendVenc"></span>
+            </div>
+            <div class="kpi-value" id="vencemHoje">0</div>
+            <div class="kpi-label">Vencem em 7 Dias</div>
+          </div>
+        </div>
+
       </section>
 
-      <!-- Gráfico -->
-      <section class="charts-grid">
+      <!-- ── MAIN GRID: Chart + Alunos Recentes ── -->
+      <section class="main-grid">
+
         <div class="chart-card">
-          <h3>📈 Receita dos Últimos 6 Meses</h3>
-          <div class="chart-container">
-            <canvas id="graficoReceita"></canvas>
+          <div class="card-header">
+            <h3>Receita dos Últimos 6 Meses</h3>
+            <span class="card-header-meta" id="totalReceitaLabel"></span>
+          </div>
+          <div class="chart-body">
+            <div class="chart-sk sk-chart-wrap" id="skChart">
+              <div class="chart-sk-bar sk-base" style="height:60%"></div>
+              <div class="chart-sk-bar sk-base" style="height:80%"></div>
+              <div class="chart-sk-bar sk-base" style="height:45%"></div>
+              <div class="chart-sk-bar sk-base" style="height:90%"></div>
+              <div class="chart-sk-bar sk-base" style="height:55%"></div>
+              <div class="chart-sk-bar sk-base" style="height:100%"></div>
+            </div>
+            <div class="chart-container" id="chartWrap" style="display:none">
+              <canvas id="graficoReceita"></canvas>
+            </div>
           </div>
         </div>
-        <div class="chart-card" id="cardProximosVenc">
-          <h3>⚡ Vencimentos Próximos</h3>
-          <div style="font-size:13px;color:var(--cinza-texto);margin-top:4px;margin-bottom:12px;">Próximos 7 dias</div>
-          <div id="tabelaVencimentos"><div class="loading-state"><div class="spinner"></div></div></div>
+
+        <div class="recent-card">
+          <div class="card-header">
+            <h3>Alunos Recentes</h3>
+            <a href="pages/alunos.html" class="link-ver-todos">Ver todos</a>
+          </div>
+          <div id="alunosRecentes">
+            <!-- skeleton rows -->
+            <div class="recent-sk-item">
+              <div class="sk-base recent-sk-avatar"></div>
+              <div class="recent-sk-content">
+                <div class="sk-base recent-sk-name"></div>
+                <div class="sk-base recent-sk-plan"></div>
+              </div>
+            </div>
+            <div class="recent-sk-item">
+              <div class="sk-base recent-sk-avatar"></div>
+              <div class="recent-sk-content">
+                <div class="sk-base recent-sk-name"></div>
+                <div class="sk-base recent-sk-plan"></div>
+              </div>
+            </div>
+            <div class="recent-sk-item">
+              <div class="sk-base recent-sk-avatar"></div>
+              <div class="recent-sk-content">
+                <div class="sk-base recent-sk-name"></div>
+                <div class="sk-base recent-sk-plan"></div>
+              </div>
+            </div>
+          </div>
         </div>
+
       </section>
 
-      <!-- Tabelas -->
-      <section class="tables-grid">
-        <div class="table-card" style="grid-column:1/-1">
-          <div class="table-header">
-            <h3>✅ Últimos Pagamentos</h3>
-            <a href="pages/pagamentos.html" class="link-ver-todos">Ver todos →</a>
+      <!-- ── BOTTOM GRID: 3 sections ── -->
+      <section class="bottom-grid">
+
+        <!-- Inadimplentes list -->
+        <div class="section-card">
+          <div class="section-card-header">
+            <div class="section-card-title danger">
+              <i data-lucide="user-x"></i>
+              <h3>Inadimplentes</h3>
+            </div>
+            <span class="section-count danger" id="countInadimpl">0</span>
           </div>
-          <div class="table-body" id="tabelaUltimosPagamentos">
+          <div class="section-list" id="listaInadimplentes">
             <div class="loading-state"><div class="spinner"></div></div>
           </div>
         </div>
+
+        <!-- Próximos vencimentos -->
+        <div class="section-card">
+          <div class="section-card-header">
+            <div class="section-card-title warning">
+              <i data-lucide="calendar-clock"></i>
+              <h3>Próximos Vencimentos</h3>
+            </div>
+            <span class="section-count warning" id="countVencimentos">0</span>
+          </div>
+          <div class="section-list" id="tabelaVencimentos">
+            <div class="loading-state"><div class="spinner"></div></div>
+          </div>
+        </div>
+
+        <!-- Últimos pagamentos -->
+        <div class="section-card">
+          <div class="section-card-header">
+            <div class="section-card-title success">
+              <i data-lucide="check-circle"></i>
+              <h3>Últimos Pagamentos</h3>
+            </div>
+            <a href="pages/pagamentos.html" class="link-ver-todos">Ver todos</a>
+          </div>
+          <div class="section-list" id="tabelaUltimosPagamentos">
+            <div class="loading-state"><div class="spinner"></div></div>
+          </div>
+        </div>
+
       </section>
 
     </div>
   </main>
 </div>
 
-<!-- Modal Novo Aluno -->
+<!-- ══════════════════════════════════════
+     MODAL — Novo Aluno
+     ══════════════════════════════════════ -->
 <div class="modal-overlay" id="modalNovoAluno">
   <div class="modal">
     <div class="modal-header">
-      <h2>Novo Aluno</h2>
-      <button class="btn-close" id="fecharModal">✕</button>
+      <h2>Cadastrar Novo Aluno</h2>
+      <button class="btn-close" id="fecharModal"><i data-lucide="x"></i></button>
     </div>
     <div class="modal-body">
       <div class="form-grid">
         <div class="form-group full">
           <label>Nome completo *</label>
-          <input type="text" id="alunoNome" placeholder="Nome do aluno">
+          <input type="text" id="alunoNome" placeholder="Nome completo do aluno" autocomplete="off">
         </div>
         <div class="form-group">
           <label>CPF</label>
@@ -163,24 +352,32 @@
           <input type="date" id="alunoInicio">
         </div>
         <div class="form-group">
+          <label>Vencimento (calculado)</label>
+          <input type="date" id="alunoVencimento" readonly style="opacity:0.6;cursor:default">
+        </div>
+        <div class="form-group full">
           <label>Observações</label>
-          <textarea id="alunoObs" rows="2" placeholder="Opcional"></textarea>
+          <textarea id="alunoObs" rows="2" placeholder="Observações internas (opcional)"></textarea>
         </div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" id="cancelarModal">Cancelar</button>
-      <button class="btn-primary" id="salvarAluno">Salvar Aluno</button>
+      <button class="btn-primary" id="salvarAluno">
+        <i data-lucide="save"></i> Salvar Aluno
+      </button>
     </div>
   </div>
 </div>
 
-<!-- Modal Pagamento -->
+<!-- ══════════════════════════════════════
+     MODAL — Registrar Pagamento
+     ══════════════════════════════════════ -->
 <div class="modal-overlay" id="modalPagamento">
   <div class="modal">
     <div class="modal-header">
       <h2>Registrar Pagamento</h2>
-      <button class="btn-close" id="fecharModalPag">✕</button>
+      <button class="btn-close" id="fecharModalPag"><i data-lucide="x"></i></button>
     </div>
     <div class="modal-body">
       <div id="alunoInfoPagamento"></div>
@@ -210,11 +407,33 @@
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" id="cancelarModalPag">Cancelar</button>
-      <button class="btn-primary" id="confirmarPagamento">✅ Confirmar Pagamento</button>
+      <button class="btn-primary" id="confirmarPagamento">
+        <i data-lucide="check"></i> Confirmar Pagamento
+      </button>
     </div>
   </div>
 </div>
 
+<!-- ══════════════════════════════════════
+     MODAL — Confirmar (custom, sem confirm())
+     ══════════════════════════════════════ -->
+<div class="modal-overlay" id="modalConfirmar">
+  <div class="modal modal-sm">
+    <div class="confirm-body">
+      <div class="confirm-icon-wrap">
+        <i data-lucide="help-circle"></i>
+      </div>
+      <h3 id="confirmTitle">Confirmar ação</h3>
+      <p id="confirmMsg">Tem certeza?</p>
+    </div>
+    <div class="modal-footer" style="justify-content:center;gap:16px">
+      <button class="btn-secondary" id="confirmNao">Cancelar</button>
+      <button class="btn-primary" id="confirmSim">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
 <script src="js/config.js"></script>
 <script src="js/supabase.js"></script>
 <script src="js/utils.js"></script>
@@ -222,8 +441,9 @@
 <script src="js/relatorios.js"></script>
 <script src="js/dashboard.js"></script>
 <script>
-  // Atualiza o card de vencimentos na seção de gráficos
-  const origRender = window.renderizarVencimentos;
+  document.addEventListener('DOMContentLoaded', () => {
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  });
 </script>
 </body>
 </html>

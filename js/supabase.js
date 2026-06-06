@@ -1,11 +1,9 @@
-// js/supabase.js — Cliente Supabase + todas as queries
+// js/supabase.js — Cliente Supabase + queries GestorFit
 
 const { createClient } = supabase;
 const db = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
 
-// =====================================
-// AUTENTICAÇÃO
-// =====================================
+// ─── AUTENTICAÇÃO ──────────────────────────────────
 
 async function loginComEmail(email, senha) {
   const { data, error } = await db.auth.signInWithPassword({ email, password: senha });
@@ -25,17 +23,12 @@ async function getUsuarioAtual() {
 
 async function getAcademiaDoUsuario() {
   const { data, error } = await db.from('academias')
-    .select('*')
-    .eq('ativo', true)
-    .limit(1)
-    .single();
+    .select('*').eq('ativo', true).limit(1).single();
   if (error) return null;
   return data;
 }
 
-// =====================================
-// ALUNOS
-// =====================================
+// ─── ALUNOS ───────────────────────────────────────
 
 async function buscarAlunos(filtros = {}) {
   let query = db.from('alunos')
@@ -44,7 +37,7 @@ async function buscarAlunos(filtros = {}) {
     .order('nome');
 
   if (filtros.status) query = query.eq('status', filtros.status);
-  if (filtros.nome) query = query.ilike('nome', `%${filtros.nome}%`);
+  if (filtros.nome)   query = query.ilike('nome', `%${filtros.nome}%`);
 
   const { data, error } = await query;
   if (error) throw error;
@@ -54,8 +47,7 @@ async function buscarAlunos(filtros = {}) {
 async function buscarAlunoPorId(id) {
   const { data, error } = await db.from('alunos')
     .select('*, planos_academia(nome, valor, duracao_dias)')
-    .eq('id', id)
-    .single();
+    .eq('id', id).single();
   if (error) throw error;
   return data;
 }
@@ -63,18 +55,14 @@ async function buscarAlunoPorId(id) {
 async function salvarAluno(dadosAluno) {
   const { data, error } = await db.from('alunos')
     .insert({ ...dadosAluno, academia_id: CONFIG.ACADEMIA_ID })
-    .select()
-    .single();
+    .select().single();
   if (error) throw error;
   return data;
 }
 
 async function atualizarAluno(id, dados) {
   const { data, error } = await db.from('alunos')
-    .update(dados)
-    .eq('id', id)
-    .select()
-    .single();
+    .update(dados).eq('id', id).select().single();
   if (error) throw error;
   return data;
 }
@@ -85,9 +73,8 @@ async function excluirAluno(id) {
 }
 
 async function buscarVencimentosProximos(dias = 7) {
-  const hoje = new Date().toISOString().split('T')[0];
+  const hoje  = new Date().toISOString().split('T')[0];
   const limite = new Date(Date.now() + dias * 86400000).toISOString().split('T')[0];
-
   const { data, error } = await db.from('alunos')
     .select('*, planos_academia(nome, valor)')
     .eq('academia_id', CONFIG.ACADEMIA_ID)
@@ -95,28 +82,51 @@ async function buscarVencimentosProximos(dias = 7) {
     .gte('data_vencimento', hoje)
     .lte('data_vencimento', limite)
     .order('data_vencimento');
-
   if (error) throw error;
   return data;
 }
 
 async function buscarInadimplentes() {
   const hoje = new Date().toISOString().split('T')[0];
-
   const { data, error } = await db.from('alunos')
     .select('*, planos_academia(nome, valor)')
     .eq('academia_id', CONFIG.ACADEMIA_ID)
     .in('status', ['ativo', 'inadimplente'])
     .lt('data_vencimento', hoje)
     .order('data_vencimento');
-
   if (error) throw error;
   return data;
 }
 
-// =====================================
-// PLANOS
-// =====================================
+async function buscarAlunosRecentes(limit = 5) {
+  const { data, error } = await db.from('alunos')
+    .select('id, nome, status, planos_academia(nome, valor)')
+    .eq('academia_id', CONFIG.ACADEMIA_ID)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return data || [];
+}
+
+async function buscarAniversariantes() {
+  const hoje = new Date();
+  const mm = String(hoje.getMonth() + 1).padStart(2, '0');
+  const dd = String(hoje.getDate()).padStart(2, '0');
+
+  const { data } = await db.from('alunos')
+    .select('id, nome, data_nascimento')
+    .eq('academia_id', CONFIG.ACADEMIA_ID)
+    .eq('status', 'ativo')
+    .not('data_nascimento', 'is', null);
+
+  if (!data) return [];
+  return data.filter(a => {
+    const d = a.data_nascimento;
+    return d && d.slice(5, 7) === mm && d.slice(8, 10) === dd;
+  });
+}
+
+// ─── PLANOS ───────────────────────────────────────
 
 async function buscarPlanos() {
   const { data, error } = await db.from('planos_academia')
@@ -141,20 +151,15 @@ async function excluirPlano(id) {
   if (error) throw error;
 }
 
-// =====================================
-// PAGAMENTOS
-// =====================================
+// ─── PAGAMENTOS ───────────────────────────────────
 
 async function registrarPagamento(dados) {
   const referencia = dados.referencia_mes || new Date().toISOString().slice(0, 7);
-
   const { data, error } = await db.from('pagamentos')
     .insert({ ...dados, academia_id: CONFIG.ACADEMIA_ID, referencia_mes: referencia })
     .select().single();
-
   if (error) throw error;
 
-  // Atualizar vencimento do aluno
   const novoVencimento = calcularProximoVencimento(dados.plano_duracao_dias || 30);
   await atualizarAluno(dados.aluno_id, { data_vencimento: novoVencimento, status: 'ativo' });
 
@@ -167,35 +172,57 @@ async function buscarPagamentos(filtros = {}) {
     .eq('academia_id', CONFIG.ACADEMIA_ID)
     .order('created_at', { ascending: false });
 
-  if (filtros.mes) query = query.eq('referencia_mes', filtros.mes);
+  if (filtros.mes)      query = query.eq('referencia_mes', filtros.mes);
   if (filtros.aluno_id) query = query.eq('aluno_id', filtros.aluno_id);
-  if (filtros.status) query = query.eq('status', filtros.status);
+  if (filtros.status)   query = query.eq('status', filtros.status);
 
   const { data, error } = await query.limit(filtros.limit || 100);
   if (error) throw error;
   return data;
 }
 
-async function buscarMetricasMes() {
-  const mesAtual = new Date().toISOString().slice(0, 7);
+// ─── MÉTRICAS ─────────────────────────────────────
 
-  const [ativos, inadimplentes, pagamentosRes, planosData] = await Promise.all([
-    db.from('alunos').select('id', { count: 'exact' })
+async function buscarMetricasMes() {
+  const mesAtual  = new Date().toISOString().slice(0, 7);
+
+  // mês anterior para calcular variação
+  const d = new Date();
+  d.setMonth(d.getMonth() - 1);
+  const mesAnterior = d.toISOString().slice(0, 7);
+
+  const [
+    ativosRes,
+    ativosMesAnteriorRes,
+    inadimplentes,
+    pagamentosRes,
+    pagamentosMesAnteriorRes,
+    planosData,
+  ] = await Promise.all([
+    db.from('alunos').select('id', { count: 'exact', head: true })
       .eq('academia_id', CONFIG.ACADEMIA_ID).eq('status', 'ativo'),
+    db.from('alunos').select('id', { count: 'exact', head: true })
+      .eq('academia_id', CONFIG.ACADEMIA_ID).in('status', ['ativo', 'inadimplente']),
     buscarInadimplentes(),
     db.from('pagamentos').select('valor')
       .eq('academia_id', CONFIG.ACADEMIA_ID)
       .eq('referencia_mes', mesAtual).eq('status', 'pago'),
+    db.from('pagamentos').select('valor')
+      .eq('academia_id', CONFIG.ACADEMIA_ID)
+      .eq('referencia_mes', mesAnterior).eq('status', 'pago'),
     buscarPlanos(),
   ]);
 
-  const receitaMes = pagamentosRes.data?.reduce((s, p) => s + parseFloat(p.valor), 0) || 0;
-  const valorInadimplente = inadimplentes.reduce((s, a) => s + parseFloat(a.planos_academia?.valor || 0), 0);
+  const receitaMes         = pagamentosRes.data?.reduce((s, p) => s + parseFloat(p.valor), 0) || 0;
+  const receitaMesAnterior = pagamentosMesAnteriorRes.data?.reduce((s, p) => s + parseFloat(p.valor), 0) || 0;
+  const valorInadimplente  = inadimplentes.reduce((s, a) => s + parseFloat(a.planos_academia?.valor || 0), 0);
 
   return {
-    totalAtivos: ativos.count || 0,
+    totalAtivos:        ativosRes.count || 0,
+    totalAtivosPrev:    ativosMesAnteriorRes.count || 0,
     totalInadimplentes: inadimplentes.length,
     receitaMes,
+    receitaMesAnterior,
     valorInadimplente,
     planos: planosData,
   };
@@ -216,9 +243,7 @@ async function buscarReceitaUltimos6Meses() {
   return resultado;
 }
 
-// =====================================
-// RELATÓRIOS
-// =====================================
+// ─── RELATÓRIOS ───────────────────────────────────
 
 async function buscarDadosRelatorio(mes) {
   const { data, error } = await db.from('pagamentos')
@@ -238,9 +263,7 @@ async function verificarRecibo(codigo) {
   return data || null;
 }
 
-// =====================================
-// ACADEMIA
-// =====================================
+// ─── ACADEMIA ─────────────────────────────────────
 
 async function buscarAcademia() {
   const { data, error } = await db.from('academias')

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gestorfit-v1';
+const CACHE_NAME = 'gestorfit-v2';
 const STATIC_ASSETS = [
   '/gestorfit/',
   '/gestorfit/index.html',
@@ -7,7 +7,7 @@ const STATIC_ASSETS = [
   '/gestorfit/css/components.css',
   '/gestorfit/js/config.js',
   '/gestorfit/js/utils.js',
-  'https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap',
+  'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap',
 ];
 
 self.addEventListener('install', e => {
