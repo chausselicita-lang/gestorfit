@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="../css/components.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 <body>
 
@@ -15,15 +16,30 @@
 
   <nav class="sidebar" id="sidebar">
     <div class="sidebar-logo">
-      <span class="logo-icon">💪</span>
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" stroke-width="2.5" fill="none" stroke="white"><path d="M6.5 6.5h2v11h-2zM15.5 6.5h2v11h-2z"/><path d="M8.5 11.5h7"/><rect x="2" y="9" width="4.5" height="6" rx="1"/><rect x="17.5" y="9" width="4.5" height="6" rx="1"/></svg>
+      </div>
       <span class="logo-text">GestorFit</span>
     </div>
     <ul class="nav-menu">
-      <li class="nav-item" onclick="location.href='../index.html'"><span class="nav-icon">📊</span><span>Dashboard</span></li>
-      <li class="nav-item" onclick="location.href='alunos.html'"><span class="nav-icon">👥</span><span>Alunos</span></li>
-      <li class="nav-item active"><span class="nav-icon">💰</span><span>Pagamentos</span></li>
-      <li class="nav-item" onclick="location.href='relatorios.html'"><span class="nav-icon">📄</span><span>Relatórios</span></li>
-      <li class="nav-item" onclick="location.href='configuracoes.html'"><span class="nav-icon">⚙️</span><span>Configurações</span></li>
+      <li class="nav-item" onclick="location.href='../index.html'">
+        <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span><span>Dashboard</span>
+      </li>
+      <li class="nav-item" onclick="location.href='alunos.html'">
+        <span class="nav-icon"><i data-lucide="users"></i></span><span>Alunos</span>
+      </li>
+      <li class="nav-item active">
+        <span class="nav-icon"><i data-lucide="credit-card"></i></span><span>Pagamentos</span>
+      </li>
+      <li class="nav-item" onclick="location.href='frequencia.html'">
+        <span class="nav-icon"><i data-lucide="activity"></i></span><span>Frequência</span>
+      </li>
+      <li class="nav-item" onclick="location.href='relatorios.html'">
+        <span class="nav-icon"><i data-lucide="file-bar-chart"></i></span><span>Relatórios</span>
+      </li>
+      <li class="nav-item" onclick="location.href='configuracoes.html'">
+        <span class="nav-icon"><i data-lucide="settings"></i></span><span>Configurações</span>
+      </li>
     </ul>
     <div class="sidebar-footer">
       <div class="user-info">
@@ -33,13 +49,15 @@
           <span class="user-plan">Plano Pro</span>
         </div>
       </div>
-      <button class="btn-logout" id="btnLogout">Sair</button>
+      <button class="btn-logout" id="btnLogout">
+        <i data-lucide="log-out"></i> Sair
+      </button>
     </div>
   </nav>
 
   <main class="main-content">
     <header class="top-header">
-      <button class="btn-menu-mobile" id="btnMenuMobile">☰</button>
+      <button class="btn-menu-mobile" id="btnMenuMobile"><i data-lucide="menu"></i></button>
       <div class="header-title">
         <h1>Pagamentos</h1>
         <span class="page-date" id="resumoPag"></span>
@@ -167,6 +185,7 @@
     await Promise.all([carregarAlunos(), carregarPagamentos()]);
     configurarEventos();
     configurarMenuMobile();
+    lucide.createIcons();
   });
 
   async function carregarAlunos() {

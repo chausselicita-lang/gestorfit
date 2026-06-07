@@ -292,3 +292,69 @@ async function atualizarAcademia(dados) {
   if (error) throw error;
   return data;
 }
+
+// ─── FREQUÊNCIA ────────────────────────────────
+
+async function registrarFrequencia(alunoId) {
+  const hoje = new Date().toISOString().split('T')[0];
+  const { data: existing } = await db.from('frequencias')
+    .select('id').eq('aluno_id', alunoId).eq('data', hoje).maybeSingle();
+  if (existing) throw new Error('Check-in já registrado hoje para este aluno');
+  const { data, error } = await db.from('frequencias')
+    .insert({ aluno_id: alunoId, academia_id: CONFIG.ACADEMIA_ID, data: hoje })
+    .select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function removerFrequencia(id) {
+  const { error } = await db.from('frequencias').delete().eq('id', id);
+  if (error) throw error;
+}
+
+async function buscarFrequenciasHoje() {
+  const hoje = new Date().toISOString().split('T')[0];
+  const { data, error } = await db.from('frequencias')
+    .select('id, created_at, alunos(id, nome, status)')
+    .eq('academia_id', CONFIG.ACADEMIA_ID)
+    .eq('data', hoje)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+async function buscarFrequenciasAluno(alunoId, limit = 35) {
+  const { data, error } = await db.from('frequencias')
+    .select('id, data')
+    .eq('aluno_id', alunoId)
+    .order('data', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return data || [];
+}
+
+async function buscarAlunosSemFrequencia(dias = 7) {
+  const limite = new Date(Date.now() - dias * 86400000).toISOString().split('T')[0];
+  const { data: alunos } = await db.from('alunos')
+    .select('id, nome, whatsapp, planos_academia(nome)')
+    .eq('academia_id', CONFIG.ACADEMIA_ID)
+    .eq('status', 'ativo');
+  if (!alunos?.length) return [];
+  const { data: recentes } = await db.from('frequencias')
+    .select('aluno_id')
+    .eq('academia_id', CONFIG.ACADEMIA_ID)
+    .gte('data', limite);
+  const idsAtivos = new Set((recentes || []).map(f => f.aluno_id));
+  return alunos.filter(a => !idsAtivos.has(a.id));
+}
+
+async function buscarFrequenciaPeriodo(inicio, fim) {
+  const { data, error } = await db.from('frequencias')
+    .select('aluno_id, data')
+    .eq('academia_id', CONFIG.ACADEMIA_ID)
+    .gte('data', inicio)
+    .lte('data', fim)
+    .order('data');
+  if (error) throw error;
+  return data || [];
+}

@@ -1,13 +1,18 @@
-// js/dashboard.js — Dashboard GestorFit v2
+// js/dashboard.js — Dashboard GestorFit v3 Premium
+
+const DONUT_COLORS = ['#00FF88','#00B2FF','#FFC107','#FF4D6D','#A78BFA','#FB923C'];
 
 document.addEventListener('DOMContentLoaded', async () => {
   const ok = await verificarAuth();
   if (!ok) return;
 
+  // Greeting
+  const userNameEl = document.getElementById('userName');
+  const greetingEl = document.getElementById('greetingName');
+  if (greetingEl && userNameEl) greetingEl.textContent = userNameEl.textContent || 'Gestor';
+
   document.getElementById('pageDate').textContent =
-    new Date().toLocaleDateString('pt-BR', {
-      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-    });
+    new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
   await carregarDashboard();
   configurarModais();
@@ -23,23 +28,33 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ─────────────────────────────────────────────────
 
 async function carregarDashboard() {
-  // Cada seção carrega independentemente — falha de uma não trava as outras
   const safe = (fn) => fn().catch(err => { console.error(err); return null; });
 
-  const [metricas, vencimentos, pagamentos, alunosRec] = await Promise.all([
+  const [metricas, vencimentos, pagamentos, alunosRec, aniversariantes, checkins] = await Promise.all([
     safe(buscarMetricasMes),
     safe(() => buscarVencimentosProximos(7)),
     safe(() => buscarPagamentos({ limit: 8 })),
     safe(() => buscarAlunosRecentes(6)),
+    safe(buscarAniversariantes),
+    safe(buscarFrequenciasHoje),
   ]);
 
+  // Academy name
+  safe(async () => {
+    const ac = await buscarAcademia();
+    if (ac?.nome) {
+      const el = document.getElementById('academyName');
+      if (el) el.textContent = ac.nome;
+    }
+  });
+
   if (metricas) {
-    renderizarKPIs(metricas, vencimentos || []);
+    renderizarKPIs(metricas, vencimentos || [], aniversariantes || []);
     atualizarBadgeNotificacoes(metricas, vencimentos || []);
     gerarNotificacoes(metricas, vencimentos || []);
+    renderizarDonut(metricas.planos || []);
   } else {
-    // Mostrar skeletons como estado de erro
-    ['skAtivos','skReceita','skInadimpl','skVenc'].forEach(id => {
+    ['skAtivos','skReceita','skInadimpl','skBirthday'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.innerHTML = '<div style="color:var(--text-secondary);font-size:12px;padding:8px">Falha ao carregar</div>';
     });
@@ -51,6 +66,7 @@ async function carregarDashboard() {
   renderizarInadimplentes();
   renderizarVencimentos(vencimentos || []);
   renderizarUltimosPagamentos(pagamentos || []);
+  renderizarCheckins(checkins || []);
 
   safe(atualizarStatusInadimplentes);
 }
@@ -58,6 +74,13 @@ async function carregarDashboard() {
 // ─────────────────────────────────────────────────
 // KPIs
 // ─────────────────────────────────────────────────
+
+function showKpiData(skId, dataId) {
+  const sk = document.getElementById(skId);
+  const dt = document.getElementById(dataId);
+  if (sk) sk.style.display = 'none';
+  if (dt) dt.style.display = 'flex';
+}
 
 function _setEl(id, value) {
   const el = document.getElementById(id);
@@ -67,11 +90,7 @@ function _setEl(id, value) {
 function _setTrend(id, atual, anterior) {
   const el = document.getElementById(id);
   if (!el) return;
-  if (!anterior || anterior === 0) {
-    el.className = 'kpi-trend-badge neutral';
-    el.textContent = '–';
-    return;
-  }
+  if (!anterior || anterior === 0) { el.className = 'kpi-trend-badge neutral'; el.textContent = '–'; return; }
   const pct = ((atual - anterior) / anterior * 100).toFixed(0);
   if (Number(pct) > 0) {
     el.className = 'kpi-trend-badge up';
@@ -79,25 +98,19 @@ function _setTrend(id, atual, anterior) {
   } else if (Number(pct) < 0) {
     el.className = 'kpi-trend-badge down';
     el.innerHTML = `<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg> ${Math.abs(pct)}%`;
-  } else {
-    el.className = 'kpi-trend-badge neutral';
-    el.textContent = '0%';
-  }
+  } else { el.className = 'kpi-trend-badge neutral'; el.textContent = '0%'; }
 }
 
-function renderizarKPIs(m, vencimentos) {
-  // Alunos Ativos
+function renderizarKPIs(m, vencimentos, aniversariantes) {
   _setEl('totalAtivos', m.totalAtivos);
   _setTrend('trendAtivos', m.totalAtivos, m.totalAtivosPrev);
   showKpiData('skAtivos', 'dataAtivos');
 
-  // Receita do mês
   _setEl('receitaMes', formatarMoeda(m.receitaMes));
   _setTrend('trendReceita', m.receitaMes, m.receitaMesAnterior);
   _setEl('totalReceitaLabel', m.receitaMes > 0 ? formatarMoeda(m.receitaMes) + ' este mês' : '');
   showKpiData('skReceita', 'dataReceita');
 
-  // Inadimplentes
   _setEl('totalInadimplentes', m.totalInadimplentes);
   const elInad = document.getElementById('trendInadimpl');
   if (elInad) {
@@ -108,28 +121,37 @@ function renderizarKPIs(m, vencimentos) {
   _setEl('countInadimpl', m.totalInadimplentes);
   showKpiData('skInadimpl', 'dataInadimpl');
 
-  // Vencimentos 7 dias
-  _setEl('vencemHoje', vencimentos.length);
-  const elVenc = document.getElementById('trendVenc');
-  if (elVenc) {
-    elVenc.className = vencimentos.length > 0 ? 'kpi-trend-badge down' : 'kpi-trend-badge neutral';
-    elVenc.textContent = vencimentos.length > 0 ? 'Urgente' : 'OK';
+  // Aniversariantes
+  const total = aniversariantes.length;
+  _setEl('totalBirthday', total);
+  const elBirthday = document.getElementById('trendBirthday');
+  if (elBirthday) {
+    if (total > 0) { elBirthday.className = 'kpi-trend-badge up'; elBirthday.textContent = 'Hoje!'; }
+    else { elBirthday.className = 'kpi-trend-badge neutral'; elBirthday.textContent = 'Nenhum'; }
   }
+  const listEl = document.getElementById('birthdayList');
+  if (listEl && total > 0) {
+    listEl.innerHTML = aniversariantes.slice(0, 3).map(a =>
+      `<div class="birthday-mini-item">🎂 ${a.nome}</div>`
+    ).join('');
+  }
+  showKpiData('skBirthday', 'dataBirthday');
+
+  // Vencimentos badge & count
   _setEl('countVencimentos', vencimentos.length);
-  showKpiData('skVenc', 'dataVenc');
 
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 // ─────────────────────────────────────────────────
-// GRÁFICO RECEITA
+// GRÁFICO RECEITA (bar)
 // ─────────────────────────────────────────────────
 
 async function renderizarGraficos() {
   try {
     const historico = await buscarReceitaUltimos6Meses();
-    const labels    = historico.map(h => nomeMes(h.mes));
-    const valores   = historico.map(h => h.total);
+    const labels  = historico.map(h => nomeMes(h.mes));
+    const valores = historico.map(h => h.total);
 
     const skChart   = document.getElementById('skChart');
     const chartWrap = document.getElementById('chartWrap');
@@ -138,7 +160,6 @@ async function renderizarGraficos() {
 
     const ctx = document.getElementById('graficoReceita');
     if (!ctx) return;
-
     if (window._chartReceita) window._chartReceita.destroy();
 
     window._chartReceita = new Chart(ctx, {
@@ -148,12 +169,12 @@ async function renderizarGraficos() {
         datasets: [{
           label: 'Receita',
           data: valores,
-          backgroundColor: 'rgba(108,99,255,0.25)',
-          borderColor: '#6C63FF',
+          backgroundColor: 'rgba(0,255,136,0.15)',
+          borderColor: '#00FF88',
           borderWidth: 2,
           borderRadius: 6,
           borderSkipped: false,
-          hoverBackgroundColor: 'rgba(108,99,255,0.4)',
+          hoverBackgroundColor: 'rgba(0,255,136,0.28)',
         }],
       },
       options: {
@@ -162,35 +183,89 @@ async function renderizarGraficos() {
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: '#16161E',
-            borderColor: '#2A2A3A',
+            backgroundColor: '#0F1B2D',
+            borderColor: 'rgba(255,255,255,0.07)',
             borderWidth: 1,
-            titleColor: '#F1F1F6',
-            bodyColor: '#8B8BA7',
+            titleColor: '#FFFFFF',
+            bodyColor: '#B0B8C4',
             padding: 12,
-            callbacks: {
-              label: ctx => ' ' + formatarMoeda(ctx.raw),
-            },
+            callbacks: { label: ctx => ' ' + formatarMoeda(ctx.raw) },
           },
         },
         scales: {
-          x: {
-            grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
-            ticks: { color: '#8B8BA7', font: { family: 'Inter', size: 12 } },
-          },
-          y: {
-            grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
-            ticks: {
-              color: '#8B8BA7',
-              font: { family: 'Inter', size: 12 },
-              callback: v => v >= 1000 ? 'R$' + (v / 1000).toFixed(0) + 'k' : 'R$' + v,
-            },
-          },
+          x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#B0B8C4', font: { family: 'Poppins', size: 11 } } },
+          y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#B0B8C4', font: { family: 'Poppins', size: 11 }, callback: v => v >= 1000 ? 'R$' + (v / 1000).toFixed(0) + 'k' : 'R$' + v } },
         },
       },
     });
-  } catch (err) {
-    console.error('Erro ao renderizar gráfico:', err);
+  } catch (err) { console.error('Erro ao renderizar gráfico:', err); }
+}
+
+// ─────────────────────────────────────────────────
+// DONUT CHART (planos)
+// ─────────────────────────────────────────────────
+
+function renderizarDonut(planos) {
+  const body = document.getElementById('donutBody');
+  if (!body) return;
+
+  if (!planos || !planos.length) {
+    body.innerHTML = '<div class="empty-state" style="padding:24px"><span style="font-size:13px;color:var(--text-secondary)">Sem dados de planos</span></div>';
+    return;
+  }
+
+  const labels = planos.map(p => p.nome || p.name || 'Plano');
+  const values = planos.map(p => p.count || p.total || 0);
+  const colors = DONUT_COLORS.slice(0, labels.length);
+
+  body.innerHTML = `
+    <div class="donut-container"><canvas id="graficoPlanos"></canvas></div>
+    <div class="donut-legend" id="donutLegend"></div>`;
+
+  const ctx = document.getElementById('graficoPlanos');
+  if (!ctx) return;
+  if (window._chartPlanos) window._chartPlanos.destroy();
+
+  window._chartPlanos = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: colors.map(c => c + '33'),
+        borderColor: colors,
+        borderWidth: 2,
+        hoverBackgroundColor: colors.map(c => c + '55'),
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '70%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0F1B2D',
+          borderColor: 'rgba(255,255,255,0.07)',
+          borderWidth: 1,
+          titleColor: '#FFFFFF',
+          bodyColor: '#B0B8C4',
+          padding: 10,
+        },
+      },
+    },
+  });
+
+  const legendEl = document.getElementById('donutLegend');
+  if (legendEl) {
+    legendEl.innerHTML = labels.map((l, i) => `
+      <div class="donut-legend-item">
+        <span class="donut-legend-label">
+          <span class="donut-legend-dot" style="background:${colors[i]}"></span>
+          ${l}
+        </span>
+        <span class="donut-legend-value">${values[i]}</span>
+      </div>`).join('');
   }
 }
 
@@ -204,20 +279,39 @@ function renderizarAlunosRecentes(alunos) {
     container.innerHTML = `<div class="empty-state">${SVG.empty}<span>Nenhum aluno cadastrado</span></div>`;
     return;
   }
-
-  const avatarColors = ['#6C63FF', '#00D4AA', '#FF4757', '#FFA502', '#667EEA'];
-
+  const avatarColors = ['#00FF88','#00B2FF','#FF4D6D','#FFC107','#A78BFA'];
   container.innerHTML = `<div class="recent-list">` + alunos.map((a, i) => `
     <div class="recent-item">
-      <div class="student-avatar" style="background:${avatarColors[i % avatarColors.length]}">
-        ${iniciais(a.nome)}
-      </div>
+      <div class="student-avatar" style="background:${avatarColors[i % avatarColors.length]}">${iniciais(a.nome)}</div>
       <div class="recent-info">
         <div class="recent-name">${a.nome}</div>
         <div class="recent-plan">${a.planos_academia?.nome || 'Sem plano'}</div>
       </div>
       ${getStatusBadge(a.status)}
     </div>`).join('') + `</div>`;
+}
+
+// ─────────────────────────────────────────────────
+// CHECK-INS HOJE
+// ─────────────────────────────────────────────────
+
+function renderizarCheckins(lista) {
+  const container = document.getElementById('listaCheckins');
+  _setEl('countCheckins', lista.length);
+  if (!lista.length) {
+    container.innerHTML = `<div class="empty-state">${SVG.empty}<span>Nenhum check-in hoje</span></div>`;
+    return;
+  }
+  container.innerHTML = lista.slice(0, 8).map(f => `
+    <div class="table-row">
+      <div class="row-info">
+        <span class="row-nome">${f.alunos?.nome || '--'}</span>
+        <span class="row-meta-text">${f.alunos?.planos_academia?.nome || '--'}</span>
+      </div>
+      <div class="row-meta">
+        <span class="badge-status verde">Presente</span>
+      </div>
+    </div>`).join('');
 }
 
 // ─────────────────────────────────────────────────
@@ -257,7 +351,7 @@ async function renderizarInadimplentes() {
 function renderizarVencimentos(vencimentos) {
   const container = document.getElementById('tabelaVencimentos');
   if (!vencimentos.length) {
-    container.innerHTML = `<div class="empty-state">${SVG.empty}<span>Nenhum vencimento nos próximos 7 dias</span></div>`;
+    container.innerHTML = `<div class="empty-state">${SVG.empty}<span>Nenhum vencimento em 7 dias</span></div>`;
     return;
   }
   container.innerHTML = vencimentos.map(a => {
@@ -272,7 +366,6 @@ function renderizarVencimentos(vencimentos) {
         </div>
         <div class="row-meta">
           <span class="badge-urgencia ${urg}">${label}</span>
-          <span class="row-valor">${formatarMoeda(a.planos_academia?.valor)}</span>
           <button class="btn-pagar" onclick="abrirModalPagamento('${a.id}')">Pagar</button>
         </div>
       </div>`;
@@ -303,20 +396,16 @@ function renderizarUltimosPagamentos(pagamentos) {
 }
 
 // ─────────────────────────────────────────────────
-// INADIMPLENTES — atualizar status no Supabase
+// INADIMPLENTES — atualizar status
 // ─────────────────────────────────────────────────
 
 async function atualizarStatusInadimplentes() {
   try {
     const lista = await buscarInadimplentes();
     await Promise.all(
-      lista
-        .filter(a => a.status !== 'inadimplente')
-        .map(a => atualizarAluno(a.id, { status: 'inadimplente' }))
+      lista.filter(a => a.status !== 'inadimplente').map(a => atualizarAluno(a.id, { status: 'inadimplente' }))
     );
-  } catch (err) {
-    console.warn('Erro ao atualizar status inadimplentes:', err);
-  }
+  } catch (err) { console.warn('Erro ao atualizar status inadimplentes:', err); }
 }
 
 // ─────────────────────────────────────────────────
@@ -324,15 +413,11 @@ async function atualizarStatusInadimplentes() {
 // ─────────────────────────────────────────────────
 
 function atualizarBadgeNotificacoes(metricas, vencimentos) {
-  const total  = metricas.totalInadimplentes + vencimentos.length;
-  const badge  = document.getElementById('badgeVencimentos');
+  const total = metricas.totalInadimplentes + vencimentos.length;
+  const badge = document.getElementById('badgeVencimentos');
   if (!badge) return;
-  if (total > 0) {
-    badge.textContent = total > 99 ? '99+' : total;
-    badge.style.display = 'flex';
-  } else {
-    badge.style.display = 'none';
-  }
+  if (total > 0) { badge.textContent = total > 99 ? '99+' : total; badge.style.display = 'flex'; }
+  else { badge.style.display = 'none'; }
 }
 
 // ─────────────────────────────────────────────────
@@ -343,55 +428,31 @@ let _notificacoes = [];
 
 function gerarNotificacoes(metricas, vencimentos) {
   _notificacoes = [];
-
-  // Inadimplentes
   if (metricas.totalInadimplentes > 0) {
-    _notificacoes.push({
-      tipo: 'danger',
-      titulo: `${metricas.totalInadimplentes} aluno(s) inadimplente(s)`,
-      desc: `Em aberto: ${formatarMoeda(metricas.valorInadimplente)}`,
-      tempo: 'Agora',
-      lido: false,
-    });
+    _notificacoes.push({ tipo: 'danger', titulo: `${metricas.totalInadimplentes} aluno(s) inadimplente(s)`, desc: `Em aberto: ${formatarMoeda(metricas.valorInadimplente)}`, tempo: 'Agora', lido: false });
   }
-
-  // Vencimentos próximos
   vencimentos.forEach(a => {
     const dias = calcularDiasRestantes(a.data_vencimento);
     if (dias <= 3) {
-      _notificacoes.push({
-        tipo: dias <= 0 ? 'danger' : 'warning',
-        titulo: `Vencimento: ${a.nome}`,
-        desc: dias <= 0 ? 'Plano vencido' : `Vence em ${dias} dia(s)`,
-        tempo: formatarData(a.data_vencimento),
-        lido: false,
-      });
+      _notificacoes.push({ tipo: dias <= 0 ? 'danger' : 'warning', titulo: `Vencimento: ${a.nome}`, desc: dias <= 0 ? 'Plano vencido' : `Vence em ${dias} dia(s)`, tempo: formatarData(a.data_vencimento), lido: false });
     }
   });
-
   renderizarPainelNotificacoes();
 }
 
 function renderizarPainelNotificacoes() {
   const container = document.getElementById('notifList');
   if (!container) return;
-
   if (!_notificacoes.length) {
-    container.innerHTML = `
-      <div class="notif-empty">
-        ${SVG.bell}
-        <span>Nenhuma notificação</span>
-      </div>`;
+    container.innerHTML = `<div class="notif-empty">${SVG.bell}<span>Nenhuma notificação</span></div>`;
     return;
   }
-
   const ICONS = {
     danger:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
     warning: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
     info:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>`,
     success: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
   };
-
   container.innerHTML = _notificacoes.map((n, i) => `
     <div class="notif-item ${n.lido ? '' : 'unread'}" data-idx="${i}">
       <div class="notif-dot ${n.tipo}">${ICONS[n.tipo] || ICONS.info}</div>
@@ -404,21 +465,14 @@ function renderizarPainelNotificacoes() {
 }
 
 function configurarNotificacoes() {
-  const btnNotif      = document.getElementById('btnNotificacoes');
-  const panel         = document.getElementById('notifPanel');
-  const overlay       = document.getElementById('panelOverlay');
-  const btnClose      = document.getElementById('btnCloseNotif');
+  const btnNotif       = document.getElementById('btnNotificacoes');
+  const panel          = document.getElementById('notifPanel');
+  const overlay        = document.getElementById('panelOverlay');
+  const btnClose       = document.getElementById('btnCloseNotif');
   const btnMarcarLidas = document.getElementById('btnMarcarLidas');
 
-  const open = () => {
-    panel?.classList.add('open');
-    overlay?.classList.add('show');
-  };
-
-  const close = () => {
-    panel?.classList.remove('open');
-    overlay?.classList.remove('show');
-  };
+  const open  = () => { panel?.classList.add('open');    overlay?.classList.add('show'); };
+  const close = () => { panel?.classList.remove('open'); overlay?.classList.remove('show'); };
 
   btnNotif?.addEventListener('click', open);
   btnClose?.addEventListener('click', close);
@@ -449,8 +503,7 @@ async function abrirModalNovoAluno() {
 function fecharModalNovoAluno() {
   document.getElementById('modalNovoAluno').classList.remove('active');
   ['alunoNome','alunoCpf','alunoWhatsapp','alunoEmail','alunoNascimento','alunoObs'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
+    const el = document.getElementById(id); if (el) el.value = '';
   });
 }
 
@@ -458,11 +511,7 @@ async function carregarPlanosNoSelect(selectId) {
   const planos = await buscarPlanos();
   const select = document.getElementById(selectId);
   select.innerHTML = '<option value="">Selecione o plano</option>' +
-    planos.map(p =>
-      `<option value="${p.id}" data-duracao="${p.duracao_dias}" data-valor="${p.valor}">
-        ${p.nome} — ${formatarMoeda(p.valor)}
-      </option>`
-    ).join('');
+    planos.map(p => `<option value="${p.id}" data-duracao="${p.duracao_dias}" data-valor="${p.valor}">${p.nome} — ${formatarMoeda(p.valor)}</option>`).join('');
 }
 
 async function handleSalvarAluno() {
@@ -471,10 +520,7 @@ async function handleSalvarAluno() {
   const planoId  = document.getElementById('alunoPlano').value;
   const inicio   = document.getElementById('alunoInicio').value;
 
-  if (!nome || !whatsapp || !planoId || !inicio) {
-    mostrarToast('Preencha todos os campos obrigatórios', 'erro');
-    return;
-  }
+  if (!nome || !whatsapp || !planoId || !inicio) { mostrarToast('Preencha todos os campos obrigatórios', 'erro'); return; }
 
   const opt    = document.querySelector(`#alunoPlano option[value="${planoId}"]`);
   const duracao = parseInt(opt.dataset.duracao);
@@ -486,17 +532,7 @@ async function handleSalvarAluno() {
   btn.disabled = true;
 
   try {
-    await salvarAluno({
-      nome,
-      cpf:           document.getElementById('alunoCpf').value,
-      whatsapp,
-      email:         document.getElementById('alunoEmail').value,
-      data_nascimento: document.getElementById('alunoNascimento').value || null,
-      plano_id:      planoId,
-      data_inicio:   inicio,
-      data_vencimento: venc.toISOString().split('T')[0],
-      observacoes:   document.getElementById('alunoObs').value,
-    });
+    await salvarAluno({ nome, cpf: document.getElementById('alunoCpf').value, whatsapp, email: document.getElementById('alunoEmail').value, data_nascimento: document.getElementById('alunoNascimento').value || null, plano_id: planoId, data_inicio: inicio, data_vencimento: venc.toISOString().split('T')[0], observacoes: document.getElementById('alunoObs').value });
     mostrarToast('Aluno cadastrado com sucesso!', 'sucesso');
     fecharModalNovoAluno();
     await carregarDashboard();
@@ -509,16 +545,14 @@ async function handleSalvarAluno() {
   }
 }
 
-// Calcular vencimento ao mudar plano ou data de início
 function configurarAutoVencimento() {
   const calcVenc = () => {
     const inicio  = document.getElementById('alunoInicio').value;
     const planoId = document.getElementById('alunoPlano').value;
     const opt     = document.querySelector(`#alunoPlano option[value="${planoId}"]`);
     if (!inicio || !opt) { document.getElementById('alunoVencimento').value = ''; return; }
-    const duracao = parseInt(opt.dataset.duracao);
-    const venc    = new Date(inicio + 'T00:00:00');
-    venc.setDate(venc.getDate() + duracao);
+    const venc = new Date(inicio + 'T00:00:00');
+    venc.setDate(venc.getDate() + parseInt(opt.dataset.duracao));
     document.getElementById('alunoVencimento').value = venc.toISOString().split('T')[0];
   };
   document.getElementById('alunoPlano')?.addEventListener('change', calcVenc);
@@ -555,15 +589,14 @@ function fecharModalPagamento() {
 
 async function handleConfirmarPagamento() {
   if (!_alunoAtualPagamento) return;
-
   const dados = {
-    aluno_id:          _alunoAtualPagamento.id,
-    valor:             parseFloat(document.getElementById('pagValor').value),
-    data_pagamento:    document.getElementById('pagData').value,
-    data_vencimento:   _alunoAtualPagamento.data_vencimento,
-    forma_pagamento:   document.getElementById('pagForma').value,
-    referencia_mes:    document.getElementById('pagReferencia').value,
-    status:            'pago',
+    aluno_id: _alunoAtualPagamento.id,
+    valor: parseFloat(document.getElementById('pagValor').value),
+    data_pagamento: document.getElementById('pagData').value,
+    data_vencimento: _alunoAtualPagamento.data_vencimento,
+    forma_pagamento: document.getElementById('pagForma').value,
+    referencia_mes: document.getElementById('pagReferencia').value,
+    status: 'pago',
     plano_duracao_dias: _alunoAtualPagamento.planos_academia?.duracao_dias,
   };
 
@@ -576,7 +609,6 @@ async function handleConfirmarPagamento() {
     mostrarToast('Pagamento registrado com sucesso!', 'sucesso');
     fecharModalPagamento();
     await carregarDashboard();
-
     const gerar = await confirmarModal('Gerar recibo em PDF?', `Pagamento de ${formatarMoeda(dados.valor)} para ${_alunoAtualPagamento?.nome || ''}.\nDeseja baixar o recibo?`);
     if (gerar) gerarReciboPDF(pagamento, _alunoAtualPagamento);
   } catch (err) {
@@ -593,37 +625,29 @@ async function handleConfirmarPagamento() {
 // ─────────────────────────────────────────────────
 
 function configurarModais() {
-  // Novo aluno
   document.getElementById('btnNovoAluno')?.addEventListener('click', abrirModalNovoAluno);
   document.getElementById('fecharModal')?.addEventListener('click', fecharModalNovoAluno);
   document.getElementById('cancelarModal')?.addEventListener('click', fecharModalNovoAluno);
   document.getElementById('salvarAluno')?.addEventListener('click', handleSalvarAluno);
-  document.getElementById('modalNovoAluno')?.addEventListener('click', e => {
-    if (e.target.id === 'modalNovoAluno') fecharModalNovoAluno();
-  });
+  document.getElementById('modalNovoAluno')?.addEventListener('click', e => { if (e.target.id === 'modalNovoAluno') fecharModalNovoAluno(); });
 
-  // Pagamento
   document.getElementById('fecharModalPag')?.addEventListener('click', fecharModalPagamento);
   document.getElementById('cancelarModalPag')?.addEventListener('click', fecharModalPagamento);
   document.getElementById('confirmarPagamento')?.addEventListener('click', handleConfirmarPagamento);
-  document.getElementById('modalPagamento')?.addEventListener('click', e => {
-    if (e.target.id === 'modalPagamento') fecharModalPagamento();
-  });
+  document.getElementById('modalPagamento')?.addEventListener('click', e => { if (e.target.id === 'modalPagamento') fecharModalPagamento(); });
 
   configurarAutoVencimento();
 }
 
 // ─────────────────────────────────────────────────
-// NAVEGAÇÃO SIDEBAR
+// NAVEGAÇÃO
 // ─────────────────────────────────────────────────
 
 function configurarNavegacao() {
   document.querySelectorAll('.nav-item').forEach(item => {
     item.addEventListener('click', () => {
       const page = item.dataset.page;
-      if (page && page !== 'dashboard') {
-        window.location.href = `pages/${page}.html`;
-      }
+      if (page && page !== 'dashboard') window.location.href = `pages/${page}.html`;
     });
   });
 }
@@ -634,8 +658,6 @@ function configurarMenuMobile() {
   if (!btn || !sidebar) return;
   btn.addEventListener('click', () => sidebar.classList.toggle('open'));
   document.addEventListener('click', e => {
-    if (!sidebar.contains(e.target) && !btn.contains(e.target)) {
-      sidebar.classList.remove('open');
-    }
+    if (!sidebar.contains(e.target) && !btn.contains(e.target)) sidebar.classList.remove('open');
   });
 }

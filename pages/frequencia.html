@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GestorFit — Frequência</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+<div class="app-layout">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" stroke-width="2.5" fill="none" stroke="white"><path d="M6.5 6.5h2v11h-2zM15.5 6.5h2v11h-2z"/><path d="M8.5 11.5h7"/><rect x="2" y="9" width="4.5" height="6" rx="1"/><rect x="17.5" y="9" width="4.5" height="6" rx="1"/></svg>
+      </div>
+      <span class="logo-text">GestorFit</span>
+    </div>
+    <ul class="nav-menu">
+      <li class="nav-item" onclick="location.href='../index.html'">
+        <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span><span>Dashboard</span>
+      </li>
+      <li class="nav-item" onclick="location.href='alunos.html'">
+        <span class="nav-icon"><i data-lucide="users"></i></span><span>Alunos</span>
+      </li>
+      <li class="nav-item" onclick="location.href='pagamentos.html'">
+        <span class="nav-icon"><i data-lucide="credit-card"></i></span><span>Pagamentos</span>
+      </li>
+      <li class="nav-item active" onclick="location.href='frequencia.html'">
+        <span class="nav-icon"><i data-lucide="activity"></i></span><span>Frequência</span>
+      </li>
+      <li class="nav-item" onclick="location.href='relatorios.html'">
+        <span class="nav-icon"><i data-lucide="file-bar-chart"></i></span><span>Relatórios</span>
+      </li>
+      <li class="nav-item" onclick="location.href='configuracoes.html'">
+        <span class="nav-icon"><i data-lucide="settings"></i></span><span>Configurações</span>
+      </li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="userAvatar">A</div>
+        <div class="user-details">
+          <span class="user-name" id="userName">Academia</span>
+          <span class="user-plan">Plano Pro</span>
+        </div>
+      </div>
+      <button class="btn-logout" id="btnLogout">
+        <i data-lucide="log-out"></i> Sair
+      </button>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main-content">
+    <header class="top-header">
+      <button class="btn-menu-mobile" id="btnMenuMobile">
+        <i data-lucide="menu"></i>
+      </button>
+      <div class="header-title">
+        <h1>Frequência</h1>
+        <span class="page-date" id="dataHoje"></span>
+      </div>
+      <div class="header-actions">
+        <span class="badge-status verde" id="countPresentes" style="font-size:13px;padding:6px 14px">0 presentes hoje</span>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <div class="freq-layout">
+
+        <!-- COLUNA ESQUERDA: Check-in + Presentes -->
+        <div>
+
+          <!-- Check-in card -->
+          <div class="freq-card">
+            <div class="freq-card-header">
+              <h3><i data-lucide="scan-line"></i> Registrar Presença</h3>
+            </div>
+            <div class="freq-card-body">
+              <div class="checkin-select-wrap">
+                <input type="text" id="checkinSearch" placeholder="Buscar aluno pelo nome..." autocomplete="off">
+                <div class="checkin-dropdown" id="checkinDropdown"></div>
+              </div>
+              <button class="btn-checkin" id="btnCheckin" disabled>
+                <i data-lucide="check-square"></i> Registrar Check-in
+              </button>
+            </div>
+          </div>
+
+          <!-- Presentes hoje -->
+          <div class="freq-card">
+            <div class="freq-card-header">
+              <h3><i data-lucide="users"></i> Presentes Hoje</h3>
+              <span class="section-count" id="badgePresentes">0</span>
+            </div>
+            <div class="freq-card-body" id="listaPresentes" style="padding:0">
+              <div class="loading-state"><div class="spinner"></div></div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- COLUNA DIREITA: Ausentes -->
+        <div>
+
+          <div class="freq-card">
+            <div class="freq-card-header">
+              <h3><i data-lucide="user-x"></i> Ausentes (+7 dias)</h3>
+              <span class="section-count danger" id="badgeAusentes">0</span>
+            </div>
+            <div class="freq-card-body" id="listaAusentes" style="padding:0">
+              <div class="loading-state"><div class="spinner"></div></div>
+            </div>
+          </div>
+
+          <div class="freq-card" style="margin-top:0">
+            <div class="freq-card-header">
+              <h3><i data-lucide="bar-chart-2"></i> Resumo do Mês</h3>
+            </div>
+            <div class="freq-card-body" id="resumoMes">
+              <div class="loading-state"><div class="spinner"></div></div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../js/config.js"></script>
+<script src="../js/supabase.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+  let todosAlunos = [];
+  let alunoSelecionado = null;
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const ok = await verificarAuth();
+    if (!ok) return;
+
+    document.getElementById('dataHoje').textContent = new Date().toLocaleDateString('pt-BR', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+    });
+
+    await carregarAlunos();
+    await Promise.all([carregarFrequencias(), carregarAusentes(), carregarResumoMes()]);
+    configurarCheckin();
+    configurarMenuMobile();
+    lucide.createIcons();
+  });
+
+  async function carregarAlunos() {
+    try {
+      todosAlunos = await buscarAlunos({ status: 'ativo' });
+    } catch (err) {
+      console.error('Erro ao carregar alunos:', err);
+    }
+  }
+
+  async function carregarFrequencias() {
+    const container = document.getElementById('listaPresentes');
+    try {
+      const lista = await buscarFrequenciasHoje();
+      document.getElementById('badgePresentes').textContent = lista.length;
+      document.getElementById('countPresentes').textContent = `${lista.length} presente(s) hoje`;
+
+      if (!lista.length) {
+        container.innerHTML = `<div class="empty-state" style="padding:24px">${SVG.empty}<span>Nenhum check-in registrado hoje</span></div>`;
+        return;
+      }
+
+      container.innerHTML = lista.map(f => `
+        <div class="presence-item" style="padding:12px 16px">
+          <div class="aluno-avatar-sm" style="background:var(--accent);width:36px;height:36px;font-size:13px">
+            ${iniciais(f.alunos?.nome || '?')}
+          </div>
+          <div style="flex:1;min-width:0">
+            <div class="presence-name">${f.alunos?.nome || '--'}</div>
+            <div class="presence-plan">${f.alunos?.status === 'ativo' ? 'Ativo' : f.alunos?.status || '--'}</div>
+          </div>
+          <span class="presence-time">
+            ${new Date(f.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+          </span>
+          <button class="btn-action" onclick="removerCheckin('${f.id}')" title="Remover check-in" style="margin-left:8px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14H6L5 6"/>
+              <path d="M10 11v6M14 11v6"/>
+            </svg>
+          </button>
+        </div>`).join('');
+    } catch (err) {
+      container.innerHTML = `<div class="empty-state" style="padding:24px">${SVG.empty}<span>Erro ao carregar</span></div>`;
+    }
+  }
+
+  async function carregarAusentes() {
+    const container = document.getElementById('listaAusentes');
+    try {
+      const lista = await buscarAlunosSemFrequencia(7);
+      document.getElementById('badgeAusentes').textContent = lista.length;
+
+      if (!lista.length) {
+        container.innerHTML = `<div class="empty-state" style="padding:24px;color:var(--accent-secondary)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Nenhum ausente nos últimos 7 dias</span>
+        </div>`;
+        return;
+      }
+
+      container.innerHTML = lista.map(a => `
+        <div class="absent-item" style="padding:10px 16px">
+          <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
+            <div class="aluno-avatar-sm" style="width:34px;height:34px;font-size:12px;background:var(--danger-dim);color:var(--danger);border:1px solid var(--danger-border)">
+              ${iniciais(a.nome)}
+            </div>
+            <div style="min-width:0">
+              <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.nome}</div>
+              <div style="font-size:12px;color:var(--text-secondary)">${a.planos_academia?.nome || '--'}</div>
+            </div>
+          </div>
+          ${a.whatsapp ? `
+            <a href="https://wa.me/55${a.whatsapp.replace(/\D/g, '')}" target="_blank" class="btn-whatsapp" title="Enviar WhatsApp" style="font-size:11px;padding:4px 8px">
+              WhatsApp
+            </a>` : ''}
+        </div>`).join('');
+    } catch (err) {
+      container.innerHTML = `<div class="empty-state" style="padding:24px">${SVG.empty}<span>Erro ao carregar</span></div>`;
+    }
+  }
+
+  async function carregarResumoMes() {
+    const container = document.getElementById('resumoMes');
+    try {
+      const hoje = new Date();
+      const inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().split('T')[0];
+      const fim = hoje.toISOString().split('T')[0];
+      const dados = await buscarFrequenciaPeriodo(inicio, fim);
+
+      const porDia = {};
+      dados.forEach(f => {
+        porDia[f.data] = (porDia[f.data] || 0) + 1;
+      });
+
+      const dias = Object.keys(porDia).length;
+      const totalCheckins = dados.length;
+      const media = dias > 0 ? (totalCheckins / dias).toFixed(1) : 0;
+
+      container.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px">
+            <span style="color:var(--text-secondary)">Dias com presença</span>
+            <strong style="color:var(--text-primary)">${dias}</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px">
+            <span style="color:var(--text-secondary)">Total de check-ins</span>
+            <strong style="color:var(--accent)">${totalCheckins}</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px">
+            <span style="color:var(--text-secondary)">Média por dia</span>
+            <strong style="color:var(--accent-secondary)">${media}</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px">
+            <span style="color:var(--text-secondary)">Alunos ativos</span>
+            <strong style="color:var(--text-primary)">${todosAlunos.length}</strong>
+          </div>
+        </div>`;
+    } catch (err) {
+      container.innerHTML = `<p style="font-size:13px;color:var(--text-secondary)">Erro ao calcular resumo</p>`;
+    }
+  }
+
+  async function removerCheckin(id) {
+    try {
+      await removerFrequencia(id);
+      mostrarToast('Check-in removido', 'aviso');
+      await carregarFrequencias();
+    } catch (err) {
+      mostrarToast('Erro: ' + err.message, 'erro');
+    }
+  }
+
+  function configurarCheckin() {
+    const input = document.getElementById('checkinSearch');
+    const dropdown = document.getElementById('checkinDropdown');
+    const btn = document.getElementById('btnCheckin');
+
+    input.addEventListener('input', () => {
+      const q = input.value.toLowerCase().trim();
+      alunoSelecionado = null;
+      btn.disabled = true;
+
+      if (!q) { dropdown.classList.remove('open'); return; }
+
+      const filtrados = todosAlunos.filter(a => a.nome.toLowerCase().includes(q)).slice(0, 8);
+
+      if (!filtrados.length) {
+        dropdown.innerHTML = '<div class="checkin-option" style="color:var(--text-secondary);cursor:default">Nenhum aluno encontrado</div>';
+        dropdown.classList.add('open');
+        return;
+      }
+
+      dropdown.innerHTML = filtrados.map(a => `
+        <div class="checkin-option" data-id="${a.id}" data-nome="${escapeAttr(a.nome)}">
+          <div class="aluno-avatar-sm" style="width:30px;height:30px;font-size:11px;flex-shrink:0;background:var(--accent)">${iniciais(a.nome)}</div>
+          <div>
+            <div style="font-weight:600;font-size:14px">${a.nome}</div>
+            <div class="co-sub">${a.planos_academia?.nome || '--'}</div>
+          </div>
+        </div>`).join('');
+
+      dropdown.classList.add('open');
+
+      dropdown.querySelectorAll('.checkin-option[data-id]').forEach(el => {
+        el.addEventListener('click', () => {
+          alunoSelecionado = { id: el.dataset.id, nome: el.dataset.nome };
+          input.value = el.dataset.nome;
+          dropdown.classList.remove('open');
+          btn.disabled = false;
+          btn.focus();
+        });
+      });
+    });
+
+    document.addEventListener('click', e => {
+      if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.remove('open');
+      }
+    });
+
+    btn.addEventListener('click', async () => {
+      if (!alunoSelecionado) return;
+
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px;margin:0"></div> Registrando...';
+
+      try {
+        await registrarFrequencia(alunoSelecionado.id);
+        mostrarToast(`Check-in de ${alunoSelecionado.nome} registrado!`, 'sucesso');
+        input.value = '';
+        alunoSelecionado = null;
+        await Promise.all([carregarFrequencias(), carregarAusentes(), carregarResumoMes()]);
+      } catch (err) {
+        mostrarToast(err.message.includes('já registrado') ? `${alunoSelecionado.nome} já deu check-in hoje` : err.message, 'aviso');
+      } finally {
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="check-square"></i> Registrar Check-in';
+        lucide.createIcons();
+      }
+    });
+  }
+
+  function escapeAttr(str) {
+    return String(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function configurarMenuMobile() {
+    const btn = document.getElementById('btnMenuMobile');
+    const sidebar = document.getElementById('sidebar');
+    if (!btn) return;
+    btn.addEventListener('click', () => sidebar.classList.toggle('open'));
+    document.addEventListener('click', e => {
+      if (!sidebar.contains(e.target) && !btn.contains(e.target)) {
+        sidebar.classList.remove('open');
+      }
+    });
+  }
+</script>
+</body>
+</html>

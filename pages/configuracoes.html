@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="../css/main.css">
   <link rel="stylesheet" href="../css/components.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 <body>
 
@@ -14,15 +15,30 @@
 
   <nav class="sidebar" id="sidebar">
     <div class="sidebar-logo">
-      <span class="logo-icon">💪</span>
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" stroke-width="2.5" fill="none" stroke="white"><path d="M6.5 6.5h2v11h-2zM15.5 6.5h2v11h-2z"/><path d="M8.5 11.5h7"/><rect x="2" y="9" width="4.5" height="6" rx="1"/><rect x="17.5" y="9" width="4.5" height="6" rx="1"/></svg>
+      </div>
       <span class="logo-text">GestorFit</span>
     </div>
     <ul class="nav-menu">
-      <li class="nav-item" onclick="location.href='../index.html'"><span class="nav-icon">📊</span><span>Dashboard</span></li>
-      <li class="nav-item" onclick="location.href='alunos.html'"><span class="nav-icon">👥</span><span>Alunos</span></li>
-      <li class="nav-item" onclick="location.href='pagamentos.html'"><span class="nav-icon">💰</span><span>Pagamentos</span></li>
-      <li class="nav-item" onclick="location.href='relatorios.html'"><span class="nav-icon">📄</span><span>Relatórios</span></li>
-      <li class="nav-item active"><span class="nav-icon">⚙️</span><span>Configurações</span></li>
+      <li class="nav-item" onclick="location.href='../index.html'">
+        <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span><span>Dashboard</span>
+      </li>
+      <li class="nav-item" onclick="location.href='alunos.html'">
+        <span class="nav-icon"><i data-lucide="users"></i></span><span>Alunos</span>
+      </li>
+      <li class="nav-item" onclick="location.href='pagamentos.html'">
+        <span class="nav-icon"><i data-lucide="credit-card"></i></span><span>Pagamentos</span>
+      </li>
+      <li class="nav-item" onclick="location.href='frequencia.html'">
+        <span class="nav-icon"><i data-lucide="activity"></i></span><span>Frequência</span>
+      </li>
+      <li class="nav-item" onclick="location.href='relatorios.html'">
+        <span class="nav-icon"><i data-lucide="file-bar-chart"></i></span><span>Relatórios</span>
+      </li>
+      <li class="nav-item active">
+        <span class="nav-icon"><i data-lucide="settings"></i></span><span>Configurações</span>
+      </li>
     </ul>
     <div class="sidebar-footer">
       <div class="user-info">
@@ -32,13 +48,15 @@
           <span class="user-plan">Plano Pro</span>
         </div>
       </div>
-      <button class="btn-logout" id="btnLogout">Sair</button>
+      <button class="btn-logout" id="btnLogout">
+        <i data-lucide="log-out"></i> Sair
+      </button>
     </div>
   </nav>
 
   <main class="main-content">
     <header class="top-header">
-      <button class="btn-menu-mobile" id="btnMenuMobile">☰</button>
+      <button class="btn-menu-mobile" id="btnMenuMobile"><i data-lucide="menu"></i></button>
       <div class="header-title">
         <h1>Configurações</h1>
         <span class="page-date">Dados da academia e planos</span>
@@ -141,6 +159,38 @@
           </div>
         </div>
 
+        <!-- WhatsApp / Z-API -->
+        <div class="config-card">
+          <div class="config-card-header">
+            <span>💬</span>
+            <h3>Notificações WhatsApp</h3>
+          </div>
+          <div class="config-card-body">
+            <p style="font-size:13px;color:var(--cinza-texto);margin-bottom:16px;line-height:1.6">
+              Configure sua instância Z-API para enviar alertas de vencimento e cobranças diretamente pelo WhatsApp.
+            </p>
+            <div class="form-grid" style="grid-template-columns:1fr">
+              <div class="form-group">
+                <label>ID da Instância Z-API</label>
+                <input type="text" id="zapiInstance" placeholder="Ex: 3D...">
+              </div>
+              <div class="form-group">
+                <label>Token da Instância</label>
+                <input type="text" id="zapiToken" placeholder="Ex: A1B2C3...">
+              </div>
+              <div class="form-group">
+                <label>Client-Token (segurança)</label>
+                <input type="text" id="zapiClientToken" placeholder="Ex: F96...">
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:16px">
+              <button class="btn-primary" id="btnSalvarZapi" style="flex:1;justify-content:center">💾 Salvar Configuração</button>
+              <button class="btn-secondary" id="btnTestarWhatsapp">🧪 Testar Envio</button>
+            </div>
+            <div id="zapiStatus" style="display:none;margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13px"></div>
+          </div>
+        </div>
+
         <!-- Sobre -->
         <div class="config-card">
           <div class="config-card-header">
@@ -184,6 +234,8 @@
     await Promise.all([carregarAcademia(), carregarPlanos()]);
     configurarEventos();
     configurarMenuMobile();
+    carregarConfZapi();
+    lucide.createIcons();
   });
 
   async function carregarAcademia() {
@@ -304,6 +356,54 @@
     const sidebar = document.getElementById('sidebar');
     if (!btn) return;
     btn.addEventListener('click', () => sidebar.classList.toggle('open'));
+  }
+
+  // ── WhatsApp / Z-API ──────────────────────────────
+
+  function carregarConfZapi() {
+    const cfg = getWhatsAppConfig();
+    if (cfg.instance) document.getElementById('zapiInstance').value = cfg.instance;
+    if (cfg.token) document.getElementById('zapiToken').value = cfg.token;
+    if (cfg.clientToken) document.getElementById('zapiClientToken').value = cfg.clientToken;
+
+    document.getElementById('btnSalvarZapi').onclick = () => {
+      const instance = document.getElementById('zapiInstance').value.trim();
+      const token = document.getElementById('zapiToken').value.trim();
+      const clientToken = document.getElementById('zapiClientToken').value.trim();
+      if (!instance || !token) { mostrarToast('Informe a instância e o token', 'erro'); return; }
+      salvarWhatsAppConfig({ instance, token, clientToken });
+      mostrarToast('✅ Configuração WhatsApp salva!', 'sucesso');
+      _zapiStatus('Configuração salva no navegador com sucesso.', true);
+    };
+
+    document.getElementById('btnTestarWhatsapp').onclick = async () => {
+      const cfg2 = getWhatsAppConfig();
+      if (!cfg2.instance || !cfg2.token) { mostrarToast('Salve a configuração antes de testar', 'aviso'); return; }
+      const academia = await buscarAcademia();
+      const tel = academia?.telefone;
+      if (!tel) { mostrarToast('Informe o telefone da academia em "Dados da Academia"', 'aviso'); return; }
+      const btn = document.getElementById('btnTestarWhatsapp');
+      btn.disabled = true; btn.textContent = 'Enviando...';
+      try {
+        await enviarWhatsApp(tel, '✅ *GestorFit* — Integração WhatsApp funcionando! Este é um teste de envio.');
+        mostrarToast('✅ Mensagem de teste enviada!', 'sucesso');
+        _zapiStatus('Mensagem de teste enviada com sucesso para ' + tel, true);
+      } catch (err) {
+        mostrarToast('Erro ao enviar: ' + err.message, 'erro');
+        _zapiStatus('Falha no envio: ' + err.message, false);
+      } finally {
+        btn.disabled = false; btn.textContent = '🧪 Testar Envio';
+      }
+    };
+  }
+
+  function _zapiStatus(msg, ok) {
+    const el = document.getElementById('zapiStatus');
+    el.style.display = 'block';
+    el.style.background = ok ? 'rgba(0,212,170,0.08)' : 'rgba(255,71,87,0.08)';
+    el.style.border = ok ? '1px solid rgba(0,212,170,0.25)' : '1px solid rgba(255,71,87,0.25)';
+    el.style.color = ok ? 'var(--verde-neon)' : 'var(--vermelho-alerta)';
+    el.textContent = msg;
   }
 </script>
 </body>

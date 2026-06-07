@@ -45,6 +45,21 @@ WHERE a.usuario_id = '32b5f22d-3f42-480b-82d2-a0918ba1dbbc'
 ON CONFLICT DO NOTHING;
 
 -- ============================================================
+-- 3b. TABELA DE FREQUÊNCIAS (check-in diário)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS frequencias (
+  id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  aluno_id    UUID REFERENCES alunos(id) ON DELETE CASCADE NOT NULL,
+  academia_id UUID REFERENCES academias(id) ON DELETE CASCADE NOT NULL,
+  data        DATE NOT NULL DEFAULT CURRENT_DATE,
+  created_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(aluno_id, data)
+);
+
+ALTER TABLE frequencias ENABLE ROW LEVEL SECURITY;
+
+-- ============================================================
 -- 4. FUNÇÃO AUXILIAR — retorna academia_id do usuário logado
 -- ============================================================
 
@@ -88,6 +103,9 @@ CREATE POLICY "planos_por_academia" ON planos_academia
   FOR ALL USING (academia_id = get_my_academia_id());
 
 CREATE POLICY "notificacoes_por_academia" ON notificacoes
+  FOR ALL USING (academia_id = get_my_academia_id());
+
+CREATE POLICY "frequencias_por_academia" ON frequencias
   FOR ALL USING (academia_id = get_my_academia_id());
 
 -- ============================================================

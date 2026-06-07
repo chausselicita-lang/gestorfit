@@ -188,6 +188,33 @@ const SVG = {
   empty: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`,
 };
 
+// ─── WhatsApp (Z-API) ──────────────────────────────
+
+function getWhatsAppConfig() {
+  try { return JSON.parse(localStorage.getItem('gestorfit_zapi') || '{}'); } catch { return {}; }
+}
+
+function salvarWhatsAppConfig(cfg) {
+  localStorage.setItem('gestorfit_zapi', JSON.stringify(cfg));
+}
+
+async function enviarWhatsApp(telefone, mensagem) {
+  const cfg = getWhatsAppConfig();
+  if (!cfg.instance || !cfg.token) throw new Error('Configure o WhatsApp em Configurações > Notificações WhatsApp');
+  const numero = '55' + String(telefone).replace(/\D/g, '');
+  const headers = { 'Content-Type': 'application/json' };
+  if (cfg.clientToken) headers['Client-Token'] = cfg.clientToken;
+  const resp = await fetch(
+    `https://api.z-api.io/instances/${cfg.instance}/token/${cfg.token}/send-text`,
+    { method: 'POST', headers, body: JSON.stringify({ phone: numero, message: mensagem }) }
+  );
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.value || err.message || `Erro ${resp.status}`);
+  }
+  return await resp.json();
+}
+
 // ─── Service Worker ────────────────────────────────
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {

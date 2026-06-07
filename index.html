@@ -29,6 +29,7 @@
     </div>
 
     <ul class="nav-menu">
+      <li class="nav-section-label">Principal</li>
       <li class="nav-item active" data-page="dashboard">
         <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span>
         <span>Dashboard</span>
@@ -39,15 +40,37 @@
       </li>
       <li class="nav-item" data-page="pagamentos">
         <span class="nav-icon"><i data-lucide="credit-card"></i></span>
-        <span>Pagamentos</span>
+        <span>Mensalidades</span>
+      </li>
+      <li class="nav-item" data-page="frequencia">
+        <span class="nav-icon"><i data-lucide="activity"></i></span>
+        <span>Frequência</span>
       </li>
       <li class="nav-item" data-page="relatorios">
-        <span class="nav-icon"><i data-lucide="file-bar-chart"></i></span>
-        <span>Relatórios</span>
+        <span class="nav-icon"><i data-lucide="bar-chart-2"></i></span>
+        <span>Financeiro</span>
       </li>
+
+      <li class="nav-section-label">Em breve</li>
+      <li class="nav-item disabled">
+        <span class="nav-icon"><i data-lucide="dumbbell"></i></span>
+        <span>Treinos</span>
+        <span class="nav-item-badge">breve</span>
+      </li>
+      <li class="nav-item disabled">
+        <span class="nav-icon"><i data-lucide="clipboard-list"></i></span>
+        <span>Avaliações</span>
+        <span class="nav-item-badge">breve</span>
+      </li>
+
+      <li class="nav-section-label">Sistema</li>
       <li class="nav-item" data-page="configuracoes">
         <span class="nav-icon"><i data-lucide="settings"></i></span>
         <span>Configurações</span>
+      </li>
+      <li class="nav-item" id="navSuporte">
+        <span class="nav-icon"><i data-lucide="life-buoy"></i></span>
+        <span>Suporte</span>
       </li>
     </ul>
 
@@ -70,10 +93,8 @@
     <div class="notif-panel-header">
       <h3>Notificações</h3>
       <div class="notif-panel-actions">
-        <button class="btn-text-sm" id="btnMarcarLidas">Marcar todas lidas</button>
-        <button class="btn-close" id="btnCloseNotif">
-          <i data-lucide="x"></i>
-        </button>
+        <button class="btn-text-sm" id="btnMarcarLidas">Marcar lidas</button>
+        <button class="btn-close" id="btnCloseNotif"><i data-lucide="x"></i></button>
       </div>
     </div>
     <div class="notif-list" id="notifList">
@@ -81,24 +102,24 @@
     </div>
   </aside>
 
-  <!-- ── PANEL OVERLAY ── -->
   <div class="panel-overlay" id="panelOverlay"></div>
 
   <!-- ── MAIN ── -->
   <main class="main-content">
 
-    <!-- Header -->
     <header class="top-header">
-      <button class="btn-menu-mobile" id="btnMenuMobile">
-        <i data-lucide="menu"></i>
-      </button>
-      <div class="header-title">
-        <h1 id="pageTitle">Dashboard</h1>
-        <span id="pageDate" class="page-date"></span>
+      <button class="btn-menu-mobile" id="btnMenuMobile"><i data-lucide="menu"></i></button>
+      <div class="header-greeting">
+        <h1>Olá, <span id="greetingName">...</span> 👋</h1>
+        <div class="header-greeting-sub">
+          <strong id="academyName">GestorFit Academia</strong>
+          <span>·</span>
+          <span id="pageDate"></span>
+        </div>
       </div>
       <div class="header-actions">
         <button class="btn-primary" id="btnNovoAluno">
-          <i data-lucide="plus"></i> Novo Aluno
+          <i data-lucide="user-plus"></i> Novo Aluno
         </button>
         <button class="btn-icon" id="btnNotificacoes" title="Notificações">
           <i data-lucide="bell"></i>
@@ -110,23 +131,17 @@
     <div class="page-content">
 
       <!-- ── KPI ROW ── -->
-      <section class="kpi-grid" id="kpiGrid">
+      <section class="kpi-grid">
 
         <!-- Alunos Ativos -->
-        <div class="kpi-card" id="kpiAtivos">
+        <div class="kpi-card kpi-green">
           <div class="kpi-skeleton" id="skAtivos">
-            <div class="kpi-sk-top">
-              <div class="sk-base kpi-sk-icon"></div>
-              <div class="sk-base kpi-sk-badge"></div>
-            </div>
-            <div class="sk-base kpi-sk-value"></div>
-            <div class="sk-base kpi-sk-label"></div>
+            <div class="kpi-sk-top"><div class="sk-base kpi-sk-icon"></div><div class="sk-base kpi-sk-badge"></div></div>
+            <div class="sk-base kpi-sk-value"></div><div class="sk-base kpi-sk-label"></div>
           </div>
           <div class="kpi-content" id="dataAtivos" style="display:none">
             <div class="kpi-top">
-              <div class="kpi-icon accent">
-                <i data-lucide="users"></i>
-              </div>
+              <div class="kpi-icon green"><i data-lucide="users"></i></div>
               <span class="kpi-trend-badge neutral" id="trendAtivos"></span>
             </div>
             <div class="kpi-value" id="totalAtivos">0</div>
@@ -135,20 +150,14 @@
         </div>
 
         <!-- Receita do Mês -->
-        <div class="kpi-card" id="kpiReceita">
+        <div class="kpi-card kpi-blue">
           <div class="kpi-skeleton" id="skReceita">
-            <div class="kpi-sk-top">
-              <div class="sk-base kpi-sk-icon"></div>
-              <div class="sk-base kpi-sk-badge"></div>
-            </div>
-            <div class="sk-base kpi-sk-value"></div>
-            <div class="sk-base kpi-sk-label"></div>
+            <div class="kpi-sk-top"><div class="sk-base kpi-sk-icon"></div><div class="sk-base kpi-sk-badge"></div></div>
+            <div class="sk-base kpi-sk-value"></div><div class="sk-base kpi-sk-label"></div>
           </div>
           <div class="kpi-content" id="dataReceita" style="display:none">
             <div class="kpi-top">
-              <div class="kpi-icon success">
-                <i data-lucide="trending-up"></i>
-              </div>
+              <div class="kpi-icon blue"><i data-lucide="trending-up"></i></div>
               <span class="kpi-trend-badge neutral" id="trendReceita"></span>
             </div>
             <div class="kpi-value" id="receitaMes">R$ 0</div>
@@ -157,20 +166,14 @@
         </div>
 
         <!-- Inadimplentes -->
-        <div class="kpi-card" id="kpiInadimpl">
+        <div class="kpi-card kpi-red">
           <div class="kpi-skeleton" id="skInadimpl">
-            <div class="kpi-sk-top">
-              <div class="sk-base kpi-sk-icon"></div>
-              <div class="sk-base kpi-sk-badge"></div>
-            </div>
-            <div class="sk-base kpi-sk-value"></div>
-            <div class="sk-base kpi-sk-label"></div>
+            <div class="kpi-sk-top"><div class="sk-base kpi-sk-icon"></div><div class="sk-base kpi-sk-badge"></div></div>
+            <div class="sk-base kpi-sk-value"></div><div class="sk-base kpi-sk-label"></div>
           </div>
           <div class="kpi-content" id="dataInadimpl" style="display:none">
             <div class="kpi-top">
-              <div class="kpi-icon danger">
-                <i data-lucide="alert-triangle"></i>
-              </div>
+              <div class="kpi-icon red"><i data-lucide="alert-triangle"></i></div>
               <span class="kpi-trend-badge neutral" id="trendInadimpl"></span>
             </div>
             <div class="kpi-value" id="totalInadimplentes">0</div>
@@ -179,40 +182,36 @@
           </div>
         </div>
 
-        <!-- Vencimentos 7 dias -->
-        <div class="kpi-card" id="kpiVenc">
-          <div class="kpi-skeleton" id="skVenc">
-            <div class="kpi-sk-top">
-              <div class="sk-base kpi-sk-icon"></div>
-              <div class="sk-base kpi-sk-badge"></div>
-            </div>
-            <div class="sk-base kpi-sk-value"></div>
-            <div class="sk-base kpi-sk-label"></div>
+        <!-- Aniversariantes -->
+        <div class="kpi-card kpi-yellow">
+          <div class="kpi-skeleton" id="skBirthday">
+            <div class="kpi-sk-top"><div class="sk-base kpi-sk-icon"></div><div class="sk-base kpi-sk-badge"></div></div>
+            <div class="sk-base kpi-sk-value"></div><div class="sk-base kpi-sk-label"></div>
           </div>
-          <div class="kpi-content" id="dataVenc" style="display:none">
+          <div class="kpi-content" id="dataBirthday" style="display:none">
             <div class="kpi-top">
-              <div class="kpi-icon warning">
-                <i data-lucide="calendar-clock"></i>
-              </div>
-              <span class="kpi-trend-badge neutral" id="trendVenc"></span>
+              <div class="kpi-icon yellow"><i data-lucide="cake"></i></div>
+              <span class="kpi-trend-badge neutral" id="trendBirthday"></span>
             </div>
-            <div class="kpi-value" id="vencemHoje">0</div>
-            <div class="kpi-label">Vencem em 7 Dias</div>
+            <div class="kpi-value" id="totalBirthday">0</div>
+            <div class="kpi-label">Aniversariantes</div>
+            <div class="birthday-mini-list" id="birthdayList"></div>
           </div>
         </div>
 
       </section>
 
-      <!-- ── MAIN GRID: Chart + Alunos Recentes ── -->
-      <section class="main-grid">
+      <!-- ── CHARTS + RECENT ── -->
+      <section class="charts-and-recent">
 
+        <!-- Bar chart -->
         <div class="chart-card">
           <div class="card-header">
-            <h3>Receita dos Últimos 6 Meses</h3>
+            <h3>Receita — Últimos 6 Meses</h3>
             <span class="card-header-meta" id="totalReceitaLabel"></span>
           </div>
           <div class="chart-body">
-            <div class="chart-sk sk-chart-wrap" id="skChart">
+            <div class="sk-chart-wrap" id="skChart">
               <div class="chart-sk-bar sk-base" style="height:60%"></div>
               <div class="chart-sk-bar sk-base" style="height:80%"></div>
               <div class="chart-sk-bar sk-base" style="height:45%"></div>
@@ -226,49 +225,37 @@
           </div>
         </div>
 
+        <!-- Donut chart -->
+        <div class="donut-card">
+          <div class="card-header">
+            <h3>Planos</h3>
+          </div>
+          <div class="donut-body" id="donutBody">
+            <div class="loading-state"><div class="spinner"></div></div>
+          </div>
+        </div>
+
+        <!-- Alunos recentes -->
         <div class="recent-card">
           <div class="card-header">
             <h3>Alunos Recentes</h3>
             <a href="pages/alunos.html" class="link-ver-todos">Ver todos</a>
           </div>
           <div id="alunosRecentes">
-            <!-- skeleton rows -->
-            <div class="recent-sk-item">
-              <div class="sk-base recent-sk-avatar"></div>
-              <div class="recent-sk-content">
-                <div class="sk-base recent-sk-name"></div>
-                <div class="sk-base recent-sk-plan"></div>
-              </div>
-            </div>
-            <div class="recent-sk-item">
-              <div class="sk-base recent-sk-avatar"></div>
-              <div class="recent-sk-content">
-                <div class="sk-base recent-sk-name"></div>
-                <div class="sk-base recent-sk-plan"></div>
-              </div>
-            </div>
-            <div class="recent-sk-item">
-              <div class="sk-base recent-sk-avatar"></div>
-              <div class="recent-sk-content">
-                <div class="sk-base recent-sk-name"></div>
-                <div class="sk-base recent-sk-plan"></div>
-              </div>
-            </div>
+            <div class="recent-sk-item"><div class="sk-base recent-sk-avatar"></div><div class="recent-sk-content"><div class="sk-base recent-sk-name"></div><div class="sk-base recent-sk-plan"></div></div></div>
+            <div class="recent-sk-item"><div class="sk-base recent-sk-avatar"></div><div class="recent-sk-content"><div class="sk-base recent-sk-name"></div><div class="sk-base recent-sk-plan"></div></div></div>
+            <div class="recent-sk-item"><div class="sk-base recent-sk-avatar"></div><div class="recent-sk-content"><div class="sk-base recent-sk-name"></div><div class="sk-base recent-sk-plan"></div></div></div>
           </div>
         </div>
 
       </section>
 
-      <!-- ── BOTTOM GRID: 3 sections ── -->
+      <!-- ── BOTTOM GRID ── -->
       <section class="bottom-grid">
 
-        <!-- Inadimplentes list -->
         <div class="section-card">
           <div class="section-card-header">
-            <div class="section-card-title danger">
-              <i data-lucide="user-x"></i>
-              <h3>Inadimplentes</h3>
-            </div>
+            <div class="section-card-title danger"><i data-lucide="user-x"></i><h3>Inadimplentes</h3></div>
             <span class="section-count danger" id="countInadimpl">0</span>
           </div>
           <div class="section-list" id="listaInadimplentes">
@@ -276,13 +263,9 @@
           </div>
         </div>
 
-        <!-- Próximos vencimentos -->
         <div class="section-card">
           <div class="section-card-header">
-            <div class="section-card-title warning">
-              <i data-lucide="calendar-clock"></i>
-              <h3>Próximos Vencimentos</h3>
-            </div>
+            <div class="section-card-title warning"><i data-lucide="calendar-clock"></i><h3>Próx. Vencimentos</h3></div>
             <span class="section-count warning" id="countVencimentos">0</span>
           </div>
           <div class="section-list" id="tabelaVencimentos">
@@ -290,16 +273,22 @@
           </div>
         </div>
 
-        <!-- Últimos pagamentos -->
         <div class="section-card">
           <div class="section-card-header">
-            <div class="section-card-title success">
-              <i data-lucide="check-circle"></i>
-              <h3>Últimos Pagamentos</h3>
-            </div>
+            <div class="section-card-title success"><i data-lucide="check-circle"></i><h3>Últimos Pagamentos</h3></div>
             <a href="pages/pagamentos.html" class="link-ver-todos">Ver todos</a>
           </div>
           <div class="section-list" id="tabelaUltimosPagamentos">
+            <div class="loading-state"><div class="spinner"></div></div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-card-header">
+            <div class="section-card-title accent"><i data-lucide="activity"></i><h3>Check-ins Hoje</h3></div>
+            <span class="section-count" id="countCheckins">0</span>
+          </div>
+          <div class="section-list" id="listaCheckins">
             <div class="loading-state"><div class="spinner"></div></div>
           </div>
         </div>
@@ -310,9 +299,7 @@
   </main>
 </div>
 
-<!-- ══════════════════════════════════════
-     MODAL — Novo Aluno
-     ══════════════════════════════════════ -->
+<!-- ── MODAL: Novo Aluno ── -->
 <div class="modal-overlay" id="modalNovoAluno">
   <div class="modal">
     <div class="modal-header">
@@ -321,58 +308,25 @@
     </div>
     <div class="modal-body">
       <div class="form-grid">
-        <div class="form-group full">
-          <label>Nome completo *</label>
-          <input type="text" id="alunoNome" placeholder="Nome completo do aluno" autocomplete="off">
-        </div>
-        <div class="form-group">
-          <label>CPF</label>
-          <input type="text" id="alunoCpf" placeholder="000.000.000-00">
-        </div>
-        <div class="form-group">
-          <label>WhatsApp *</label>
-          <input type="tel" id="alunoWhatsapp" placeholder="(77) 99999-9999">
-        </div>
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" id="alunoEmail" placeholder="email@exemplo.com">
-        </div>
-        <div class="form-group">
-          <label>Data de Nascimento</label>
-          <input type="date" id="alunoNascimento">
-        </div>
-        <div class="form-group">
-          <label>Plano *</label>
-          <select id="alunoPlano">
-            <option value="">Selecione o plano</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Data de Início *</label>
-          <input type="date" id="alunoInicio">
-        </div>
-        <div class="form-group">
-          <label>Vencimento (calculado)</label>
-          <input type="date" id="alunoVencimento" readonly style="opacity:0.6;cursor:default">
-        </div>
-        <div class="form-group full">
-          <label>Observações</label>
-          <textarea id="alunoObs" rows="2" placeholder="Observações internas (opcional)"></textarea>
-        </div>
+        <div class="form-group full"><label>Nome completo *</label><input type="text" id="alunoNome" placeholder="Nome completo do aluno" autocomplete="off"></div>
+        <div class="form-group"><label>CPF</label><input type="text" id="alunoCpf" placeholder="000.000.000-00"></div>
+        <div class="form-group"><label>WhatsApp *</label><input type="tel" id="alunoWhatsapp" placeholder="(77) 99999-9999"></div>
+        <div class="form-group"><label>Email</label><input type="email" id="alunoEmail" placeholder="email@exemplo.com"></div>
+        <div class="form-group"><label>Data de Nascimento</label><input type="date" id="alunoNascimento"></div>
+        <div class="form-group"><label>Plano *</label><select id="alunoPlano"><option value="">Selecione o plano</option></select></div>
+        <div class="form-group"><label>Data de Início *</label><input type="date" id="alunoInicio"></div>
+        <div class="form-group"><label>Vencimento (calculado)</label><input type="date" id="alunoVencimento" readonly style="opacity:0.6;cursor:default"></div>
+        <div class="form-group full"><label>Observações</label><textarea id="alunoObs" rows="2" placeholder="Observações internas (opcional)"></textarea></div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" id="cancelarModal">Cancelar</button>
-      <button class="btn-primary" id="salvarAluno">
-        <i data-lucide="save"></i> Salvar Aluno
-      </button>
+      <button class="btn-primary" id="salvarAluno"><i data-lucide="save"></i> Salvar Aluno</button>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════
-     MODAL — Registrar Pagamento
-     ══════════════════════════════════════ -->
+<!-- ── MODAL: Registrar Pagamento ── -->
 <div class="modal-overlay" id="modalPagamento">
   <div class="modal">
     <div class="modal-header">
@@ -382,16 +336,9 @@
     <div class="modal-body">
       <div id="alunoInfoPagamento"></div>
       <div class="form-grid">
-        <div class="form-group">
-          <label>Valor *</label>
-          <input type="number" id="pagValor" step="0.01" placeholder="0,00">
-        </div>
-        <div class="form-group">
-          <label>Data do Pagamento *</label>
-          <input type="date" id="pagData">
-        </div>
-        <div class="form-group">
-          <label>Forma de Pagamento *</label>
+        <div class="form-group"><label>Valor *</label><input type="number" id="pagValor" step="0.01" placeholder="0,00"></div>
+        <div class="form-group"><label>Data do Pagamento *</label><input type="date" id="pagData"></div>
+        <div class="form-group"><label>Forma de Pagamento *</label>
           <select id="pagForma">
             <option value="pix">PIX</option>
             <option value="dinheiro">Dinheiro</option>
@@ -399,30 +346,21 @@
             <option value="cartao_debito">Cartão Débito</option>
           </select>
         </div>
-        <div class="form-group">
-          <label>Referência (mês/ano)</label>
-          <input type="month" id="pagReferencia">
-        </div>
+        <div class="form-group"><label>Referência (mês/ano)</label><input type="month" id="pagReferencia"></div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" id="cancelarModalPag">Cancelar</button>
-      <button class="btn-primary" id="confirmarPagamento">
-        <i data-lucide="check"></i> Confirmar Pagamento
-      </button>
+      <button class="btn-primary" id="confirmarPagamento"><i data-lucide="check"></i> Confirmar Pagamento</button>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════
-     MODAL — Confirmar (custom, sem confirm())
-     ══════════════════════════════════════ -->
+<!-- ── MODAL: Confirmar ── -->
 <div class="modal-overlay" id="modalConfirmar">
   <div class="modal modal-sm">
     <div class="confirm-body">
-      <div class="confirm-icon-wrap">
-        <i data-lucide="help-circle"></i>
-      </div>
+      <div class="confirm-icon-wrap"><i data-lucide="help-circle"></i></div>
       <h3 id="confirmTitle">Confirmar ação</h3>
       <p id="confirmMsg">Tem certeza?</p>
     </div>
@@ -433,7 +371,6 @@
   </div>
 </div>
 
-<!-- Scripts -->
 <script src="js/config.js"></script>
 <script src="js/supabase.js"></script>
 <script src="js/utils.js"></script>
@@ -443,6 +380,9 @@
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     if (typeof lucide !== 'undefined') lucide.createIcons();
+    document.getElementById('navSuporte')?.addEventListener('click', () => {
+      window.open('mailto:suporte@gestorfit.com.br', '_blank');
+    });
   });
 </script>
 </body>
