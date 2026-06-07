@@ -280,15 +280,19 @@ async function verificarRecibo(codigo) {
 // ─── ACADEMIA ─────────────────────────────────────
 
 async function buscarAcademia() {
+  const { data: { user } } = await db.auth.getUser();
+  if (!user) return null;
   const { data, error } = await db.from('academias')
-    .select('*').eq('id', CONFIG.ACADEMIA_ID).single();
+    .select('*').eq('usuario_id', user.id).limit(1).maybeSingle();
   if (error) return null;
   return data;
 }
 
 async function atualizarAcademia(dados) {
+  const { data: { user } } = await db.auth.getUser();
+  if (!user) throw new Error('Usuário não autenticado');
   const { data, error } = await db.from('academias')
-    .update(dados).eq('id', CONFIG.ACADEMIA_ID).select().single();
+    .update(dados).eq('usuario_id', user.id).select().maybeSingle();
   if (error) throw error;
   return data;
 }
