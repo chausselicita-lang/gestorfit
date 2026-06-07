@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GestorFit — Nova Senha</title>
+  <link rel="icon" href="assets/icons/icon-72.png">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="login-page">
+  <div class="login-left">
+    <div class="login-brand">
+      <span class="login-brand-icon">💪</span>
+      <h1>GestorFit</h1>
+      <p>Defina sua nova senha de acesso</p>
+    </div>
+  </div>
+
+  <div class="login-right">
+    <div class="login-form-box">
+      <h2>Nova Senha</h2>
+      <p class="subtitle" id="subtitulo">Digite a senha que deseja usar para acessar o sistema.</p>
+
+      <form class="login-form" id="formSenha" onsubmit="return false;">
+        <div class="form-group">
+          <label>Nova Senha</label>
+          <input type="password" id="novaSenha" placeholder="Mínimo 6 caracteres" required>
+        </div>
+        <div class="form-group">
+          <label>Confirmar Senha</label>
+          <input type="password" id="confirmarSenha" placeholder="Repita a senha" required>
+        </div>
+        <button type="submit" class="btn-login" id="btnSalvar">
+          <span id="btnTexto">Salvar Nova Senha</span>
+        </button>
+      </form>
+
+      <div id="msgErro" style="display:none;margin-top:16px;padding:12px;background:rgba(255,59,92,0.1);border:1px solid rgba(255,59,92,0.3);border-radius:8px;color:#FF4757;font-size:14px;"></div>
+      <div id="msgSucesso" style="display:none;margin-top:16px;padding:12px;background:rgba(0,212,170,0.1);border:1px solid rgba(0,212,170,0.3);border-radius:8px;color:#00D4AA;font-size:14px;text-align:center;"></div>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script>
+  const { createClient } = supabase;
+  const db = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+
+  // Lê o token de recuperação do hash da URL
+  const hash = window.location.hash.substring(1);
+  const params = new URLSearchParams(hash);
+  const accessToken = params.get('access_token');
+  const type = params.get('type');
+
+  if (!accessToken || type !== 'recovery') {
+    document.getElementById('subtitulo').textContent = 'Link inválido ou expirado. Solicite um novo link de redefinição.';
+    document.getElementById('formSenha').style.display = 'none';
+  } else {
+    // Define a sessão com o token de recuperação
+    db.auth.setSession({ access_token: accessToken, refresh_token: params.get('refresh_token') || '' });
+  }
+
+  document.getElementById('formSenha').addEventListener('submit', async () => {
+    const nova = document.getElementById('novaSenha').value;
+    const confirmar = document.getElementById('confirmarSenha').value;
+    const btn = document.getElementById('btnSalvar');
+    const btnTexto = document.getElementById('btnTexto');
+    const msgErro = document.getElementById('msgErro');
+    const msgSucesso = document.getElementById('msgSucesso');
+
+    msgErro.style.display = 'none';
+    msgSucesso.style.display = 'none';
+
+    if (nova.length < 6) {
+      msgErro.style.display = 'block';
+      msgErro.textContent = 'A senha deve ter pelo menos 6 caracteres.';
+      return;
+    }
+    if (nova !== confirmar) {
+      msgErro.style.display = 'block';
+      msgErro.textContent = 'As senhas não coincidem. Tente novamente.';
+      return;
+    }
+
+    btn.disabled = true;
+    btnTexto.textContent = 'Salvando...';
+
+    try {
+      const { error } = await db.auth.updateUser({ password: nova });
+      if (error) throw error;
+      msgSucesso.style.display = 'block';
+      msgSucesso.textContent = '✓ Senha alterada com sucesso! Redirecionando para o login...';
+      document.getElementById('formSenha').style.display = 'none';
+      setTimeout(() => { window.location.href = 'login.html'; }, 2500);
+    } catch (err) {
+      msgErro.style.display = 'block';
+      msgErro.textContent = 'Erro ao salvar senha. O link pode ter expirado — solicite um novo.';
+      btn.disabled = false;
+      btnTexto.textContent = 'Salvar Nova Senha';
+    }
+  });
+</script>
+
+</body>
+</html>
