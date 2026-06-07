@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GestorFit — Apresentação</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent: #6C63FF;
+      --accent2: #00D4AA;
+      --danger: #FF4757;
+      --warning: #FFA502;
+      --bg: #07070E;
+      --bg2: #0D0D1A;
+      --card: #11111F;
+      --border: rgba(255,255,255,0.07);
+      --text: #F0F0FF;
+      --muted: #7B7B9A;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── NOISE TEXTURE ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── GLOW BLOBS ── */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.12;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .blob-1 { width: 600px; height: 600px; background: var(--accent); top: -200px; left: -150px; }
+    .blob-2 { width: 500px; height: 500px; background: var(--accent2); bottom: -150px; right: -100px; }
+    .blob-3 { width: 300px; height: 300px; background: var(--danger); top: 40%; left: 50%; transform: translateX(-50%); opacity: 0.06; }
+
+    /* ── CONTAINER ── */
+    .wrapper { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 24px 80px; }
+
+    /* ── HERO ── */
+    .hero {
+      text-align: center;
+      padding: 80px 0 64px;
+    }
+
+    .logo-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 32px;
+    }
+
+    .logo-icon {
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, var(--accent), #9B8FFF);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 40px rgba(108,99,255,0.4);
+    }
+
+    .logo-icon svg {
+      width: 30px;
+      height: 30px;
+      stroke: white;
+      fill: none;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .logo-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 36px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff 30%, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -1px;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      background: rgba(108,99,255,0.12);
+      border: 1px solid rgba(108,99,255,0.3);
+      border-radius: 100px;
+      font-size: 13px;
+      color: #9B8FFF;
+      font-weight: 500;
+      margin-bottom: 24px;
+      letter-spacing: 0.5px;
+    }
+
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(32px, 6vw, 52px);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -1.5px;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 span {
+      background: linear-gradient(135deg, var(--accent2), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: 18px;
+      color: var(--muted);
+      max-width: 560px;
+      margin: 0 auto 40px;
+      line-height: 1.7;
+      font-weight: 400;
+    }
+
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      flex-wrap: wrap;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent2), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+      margin: 0 0 56px;
+    }
+
+    /* ── SECTION TITLE ── */
+    .section-title {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .section-title h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    .section-title p {
+      font-size: 15px;
+      color: var(--muted);
+    }
+
+    /* ── FEATURE LIST ── */
+    .features {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 60px;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px 22px;
+      transition: border-color .2s, transform .2s, box-shadow .2s;
+      cursor: default;
+    }
+
+    .feature-item:hover {
+      border-color: rgba(108,99,255,0.3);
+      transform: translateX(4px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3), -4px 0 0 var(--accent);
+    }
+
+    .feature-num {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      background: rgba(108,99,255,0.12);
+      color: var(--accent);
+      border: 1px solid rgba(108,99,255,0.2);
+    }
+
+    .feature-icon {
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .feature-body {
+      flex: 1;
+    }
+
+    .feature-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 3px;
+      color: var(--text);
+    }
+
+    .feature-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── HIGHLIGHT CARDS ── */
+    .highlights {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-bottom: 60px;
+    }
+
+    .highlight-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 24px;
+      text-align: center;
+      transition: transform .2s, box-shadow .2s;
+    }
+
+    .highlight-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    }
+
+    .highlight-card.purple { border-color: rgba(108,99,255,0.25); }
+    .highlight-card.teal   { border-color: rgba(0,212,170,0.25); }
+    .highlight-card.red    { border-color: rgba(255,71,87,0.25); }
+
+    .highlight-emoji { font-size: 36px; margin-bottom: 12px; display: block; }
+
+    .highlight-card h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .highlight-card p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── PWA BANNER ── */
+    .pwa-banner {
+      background: linear-gradient(135deg, rgba(108,99,255,0.1), rgba(0,212,170,0.08));
+      border: 1px solid rgba(108,99,255,0.25);
+      border-radius: 20px;
+      padding: 32px 36px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      margin-bottom: 60px;
+      flex-wrap: wrap;
+    }
+
+    .pwa-banner-icon {
+      font-size: 48px;
+      flex-shrink: 0;
+    }
+
+    .pwa-banner-text h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .pwa-banner-text p {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      text-align: center;
+      padding: 40px 0 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .footer-logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    .footer p {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      .hero { padding: 56px 0 48px; }
+      .hero-stats { gap: 28px; }
+      .pwa-banner { flex-direction: column; text-align: center; padding: 24px; }
+      .feature-item:hover { transform: none; box-shadow: none; border-color: rgba(108,99,255,0.3); }
+    }
+
+    /* ── PRINT ── */
+    @media print {
+      body { background: #fff; color: #000; }
+      .blob, body::before { display: none; }
+      .feature-item { border: 1px solid #ddd; break-inside: avoid; }
+      .hero h1 span, .logo-name, .stat-num {
+        -webkit-text-fill-color: var(--accent);
+        color: var(--accent);
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+
+<div class="wrapper">
+
+  <!-- ── HERO ── -->
+  <section class="hero">
+    <div class="logo-wrap">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M6.5 6.5h2v11h-2zM15.5 6.5h2v11h-2z"/><path d="M8.5 11.5h7"/><rect x="2" y="9" width="4.5" height="6" rx="1"/><rect x="17.5" y="9" width="4.5" height="6" rx="1"/></svg>
+      </div>
+      <span class="logo-name">GestorFit</span>
+    </div>
+
+    <div class="hero-badge">💼 Sistema de Gestão para Academias</div>
+
+    <h1>Tudo que sua academia<br><span>precisa em um só lugar</span></h1>
+
+    <p>Controle alunos, pagamentos, frequência e relatórios — de forma simples, rápida e profissional.</p>
+
+    <div class="hero-stats">
+      <div class="stat-item">
+        <div class="stat-num">16</div>
+        <div class="stat-label">Funcionalidades</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">100%</div>
+        <div class="stat-label">Online e Seguro</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">0</div>
+        <div class="stat-label">Papelada</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ── DESTAQUES ── -->
+  <div class="highlights">
+    <div class="highlight-card purple">
+      <span class="highlight-emoji">📊</span>
+      <h3>Controle Financeiro</h3>
+      <p>Acompanhe receita, inadimplência e pagamentos em tempo real.</p>
+    </div>
+    <div class="highlight-card teal">
+      <span class="highlight-emoji">👥</span>
+      <h3>Gestão de Alunos</h3>
+      <p>Cadastro completo, planos personalizados e histórico de cada aluno.</p>
+    </div>
+    <div class="highlight-card red">
+      <span class="highlight-emoji">🔔</span>
+      <h3>Alertas Automáticos</h3>
+      <p>Notificações de vencimentos e inadimplência antes que virem problema.</p>
+    </div>
+  </div>
+
+  <!-- ── FEATURE LIST ── -->
+  <div class="section-title">
+    <h2>O que o GestorFit faz</h2>
+    <p>Uma lista completa do que o sistema realiza no dia a dia da sua academia</p>
+  </div>
+
+  <div class="features">
+
+    <div class="feature-item">
+      <div class="feature-num">1</div>
+      <div class="feature-icon">👤</div>
+      <div class="feature-body">
+        <div class="feature-title">Cadastra alunos</div>
+        <div class="feature-desc">Nome, CPF, WhatsApp, e-mail, data de nascimento, plano e data de início — tudo organizado em um único lugar.</div>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-num">2</div>
+      <div class="feature-icon">⚠️</div>
+      <div class="feature-body">
+        <div class="feature-title">Monitora mensalidades atrasadas</div>
+        <div class="feature-desc">Lista todos os alunos inadimplentes com quantos dias de atraso e o valor em aberto — direto no painel principal.</div>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-num">3</div>
+      <div class="feature-icon">📅</div>
+      <div class="feature-body">
+        <div class="feature-title">Avisa antes do vencimento</div>
+        <div class="feature-desc">Exibe os alunos que vencerão nos próximos 7 dias, com cores de urgência — para você agir antes do atraso acontecer.</div>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-num">4</div>
+      <div class="feature-icon">💳</div>
+      <div class="feature-body">
+        <div class="feature-title">Registra pagamentos</div>
+        <div class="feature-desc">Aceita PIX, dinheiro, cartão de crédito e débito. Registra valor, data e forma de pagamento com um clique.</div>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-num">5</div>
+      <div class="feature-icon">🧾</div>
+      <div class="feature-body">
+        <div class="feature-title">Gera recibo em PDF</div>
+        <div class="feature-desc">Após cada pagamento, gera automaticamente um recibo em PDF para entregar ao aluno — profissional e com os dados da academia.</div>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-num">6</div>
+      <div class="feature-icon">✅</div>
+      <div class="feature-body">
+        <div class="feature-title">Controla a frequência diária</div>
+        <div class="feature-desc">Registra o check-in de cada aluno, mostra quem veio e quem faltou no dia, e guarda o histórico mensal.</div>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-num">7</div>
+      <div class="feature-icon">💰</div>
+      <div class="feature-body">
+        <div class="feature-title">Mostra o faturamento do mês</div>
+        <div class="feature-desc">Exibe a receita total do mês atual e compara com o mês anterior, indicando se cresceu ou caiu.</div>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-num">8</div>
+      <div class="feature-icon">📈</div>
+      <div class="feature-body">
+        <div class="feature-title">Histórico de receita em gráfico</div>
+        <div class="feature-desc">Gráfico visual dos últimos 6 meses de faturamento — ideal para ver a evolução financeira da academia de forma clara.</div>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-num">9</div>
+      <div class="feature-icon">📊</div>
+      <div class="feature-body">
+        <div class="feature-title">Painel de indicadores (KPIs)</div>
+        <div class="feature-desc">Quatro indicadores sempre visíveis: alunos ativos, receita do mês, total de inadimplentes e aniversariantes do dia.</div>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-num">10</div>
+      <div class="feature-icon">🎂</div>
+      <div class="feature-body">
+        <div class="feature-title">Informa os aniversariantes do dia</div>
+        <div class="feature-desc">Toda vez que você abre o sistema, aparece quais alunos fazem aniversário hoje — para não perder a oportunidade de parabenizar.</div>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-num">11</div>
+      <div class="feature-icon">💬</div>
+      <div class="feature-body">
+        <div class="feature-title">Envia mensagem pelo WhatsApp</div>
+        <div class="feature-desc">Integração com WhatsApp para enviar cobranças, avisos de vencimento e mensagens personalizadas direto do sistema.</div>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-num">12</div>
+      <div class="feature-icon">📄</div>
+      <div class="feature-body">
+        <div class="feature-title">Relatório financeiro mensal em PDF</div>
+        <div class="feature-desc">Gera um relatório completo do mês com todos os pagamentos, inadimplentes e resumo financeiro — pronto para imprimir ou guardar.</div>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-num">13</div>
+      <div class="feature-icon">📋</div>
+      <div class="feature-body">
+        <div class="feature-title">Gerencia os planos da academia</div>
+        <div class="feature-desc">Crie planos personalizados — mensal, trimestral, semestral — com nome, duração em dias e valor. Edite quando quiser.</div>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-num">14</div>
+      <div class="feature-icon">🔔</div>
+      <div class="feature-body">
+        <div class="feature-title">Painel de notificações</div>
+        <div class="feature-desc">Ícone de sino com contador exibe alertas de inadimplência e vencimentos próximos — você vê tudo sem precisar procurar.</div>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-num">15</div>
+      <div class="feature-icon">🔒</div>
+      <div class="feature-body">
+        <div class="feature-title">Acesso protegido com senha</div>
+        <div class="feature-desc">Somente você, como gestora, acessa o sistema. Login com e-mail e senha, com opção de redefinição segura a qualquer momento.</div>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-num">16</div>
+      <div class="feature-icon">📱</div>
+      <div class="feature-body">
+        <div class="feature-title">Funciona como aplicativo no celular</div>
+        <div class="feature-desc">Instale direto no celular ou tablet sem precisar de Play Store ou App Store — abre como um app, rápido e leve.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── PWA BANNER ── -->
+  <div class="pwa-banner">
+    <div class="pwa-banner-icon">📱</div>
+    <div class="pwa-banner-text">
+      <h3>Funciona em qualquer dispositivo</h3>
+      <p>Celular, tablet ou computador — o GestorFit se adapta à tela que você tiver. Sem instalar nada. Acesse pelo navegador e, se quiser, instale como aplicativo com um toque.</p>
+    </div>
+  </div>
+
+  <!-- ── FOOTER ── -->
+  <div class="footer">
+    <div class="footer-logo">GestorFit</div>
+    <p>Sistema de gestão desenvolvido especialmente para academias modernas.</p>
+  </div>
+
+</div>
+
+</body>
+</html>
