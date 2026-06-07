@@ -65,6 +65,12 @@
         <button type="submit" class="btn-login" id="btnEntrar">
           <span id="btnEntrarText">Entrar</span>
         </button>
+
+        <div style="text-align:right;margin-top:10px">
+          <a href="#" id="linkEsqueceuSenha" style="font-size:13px;color:var(--cinza-texto);text-decoration:none;">
+            Esqueceu sua senha?
+          </a>
+        </div>
       </form>
 
       <div class="login-divider">ou</div>
@@ -82,6 +88,29 @@
   </div>
 </div>
 
+<!-- Modal Esqueceu Senha -->
+<div id="modalReset" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:24px">
+  <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:20px;padding:36px 32px;max-width:400px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,.5)">
+    <h3 style="margin:0 0 8px;font-size:18px;color:var(--text-primary)">Redefinir senha</h3>
+    <p style="font-size:13px;color:var(--cinza-texto);margin-bottom:24px;line-height:1.5">
+      Informe o e-mail da sua conta de administrador. Enviaremos um link para criar uma nova senha.
+    </p>
+    <div class="form-group">
+      <label>E-mail</label>
+      <input type="email" id="resetEmail" placeholder="seu@email.com" autocomplete="email">
+    </div>
+    <div id="resetMsg" style="display:none;margin:12px 0;padding:12px 14px;border-radius:10px;font-size:13px;line-height:1.5"></div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button id="btnEnviarReset" onclick="enviarReset()" style="flex:1;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer">
+        <span id="btnResetText">Enviar link</span>
+      </button>
+      <button onclick="fecharModal()" style="padding:13px 18px;background:transparent;color:var(--cinza-texto);border:1px solid var(--card-border);border-radius:12px;font-size:14px;cursor:pointer">
+        Cancelar
+      </button>
+    </div>
+  </div>
+</div>
+
 <script src="js/config.js"></script>
 <script src="js/utils.js"></script>
 <script>
@@ -94,6 +123,70 @@
     if (user) window.location.href = 'index.html';
   })();
 
+  // ── Modal Esqueceu Senha ──────────────────────────────
+  document.getElementById('linkEsqueceuSenha').addEventListener('click', e => {
+    e.preventDefault();
+    const modal = document.getElementById('modalReset');
+    modal.style.display = 'flex';
+    document.getElementById('resetEmail').value = document.getElementById('loginEmail').value;
+    document.getElementById('resetMsg').style.display = 'none';
+    document.getElementById('resetEmail').focus();
+  });
+
+  function fecharModal() {
+    document.getElementById('modalReset').style.display = 'none';
+  }
+
+  document.getElementById('modalReset').addEventListener('click', e => {
+    if (e.target === document.getElementById('modalReset')) fecharModal();
+  });
+
+  document.getElementById('resetEmail').addEventListener('keydown', e => {
+    if (e.key === 'Enter') enviarReset();
+    if (e.key === 'Escape') fecharModal();
+  });
+
+  async function enviarReset() {
+    const email = document.getElementById('resetEmail').value.trim();
+    const msgEl = document.getElementById('resetMsg');
+    const btn = document.getElementById('btnEnviarReset');
+    const txt = document.getElementById('btnResetText');
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      msgEl.style.display = 'block';
+      msgEl.style.background = 'rgba(255,71,87,0.1)';
+      msgEl.style.border = '1px solid rgba(255,71,87,0.3)';
+      msgEl.style.color = 'var(--vermelho-alerta)';
+      msgEl.textContent = 'Informe um e-mail válido.';
+      return;
+    }
+
+    btn.disabled = true;
+    txt.textContent = 'Enviando…';
+
+    try {
+      const redirectUrl = window.location.origin + window.location.pathname.replace('login.html', 'reset-senha.html');
+      const { error } = await db.auth.resetPasswordForEmail(email, { redirectTo: redirectUrl });
+      if (error) throw error;
+      msgEl.style.display = 'block';
+      msgEl.style.background = 'rgba(0,212,170,0.08)';
+      msgEl.style.border = '1px solid rgba(0,212,170,0.25)';
+      msgEl.style.color = 'var(--verde-neon)';
+      msgEl.textContent = '✅ Link enviado! Verifique seu e-mail (inclusive a pasta de spam).';
+      btn.disabled = false;
+      txt.textContent = 'Reenviar link';
+    } catch (err) {
+      msgEl.style.display = 'block';
+      msgEl.style.background = 'rgba(255,71,87,0.1)';
+      msgEl.style.border = '1px solid rgba(255,71,87,0.3)';
+      msgEl.style.color = 'var(--vermelho-alerta)';
+      msgEl.textContent = 'Erro: ' + (err.message || 'Tente novamente.');
+      btn.disabled = false;
+      txt.textContent = 'Enviar link';
+    }
+  }
+
+  // ── Login ─────────────────────────────────────────────
   document.getElementById('loginForm').addEventListener('submit', async () => {
     const email = document.getElementById('loginEmail').value.trim();
     const senha = document.getElementById('loginSenha').value;

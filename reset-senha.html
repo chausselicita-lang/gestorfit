@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GestorFit — Redefinir Senha</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="assets/icons/icon-72.png">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .reset-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-primary);
+      padding: 24px;
+    }
+
+    .reset-box {
+      width: 100%;
+      max-width: 420px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 40px 36px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+    }
+
+    .reset-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 32px;
+      justify-content: center;
+    }
+
+    .reset-logo-icon {
+      font-size: 28px;
+    }
+
+    .reset-logo h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 0;
+    }
+
+    .reset-box h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 0 0 8px;
+      text-align: center;
+    }
+
+    .reset-box .subtitle {
+      font-size: 14px;
+      color: var(--cinza-texto);
+      text-align: center;
+      margin-bottom: 28px;
+      line-height: 1.5;
+    }
+
+    .senha-req {
+      margin: 12px 0 20px;
+      padding: 12px 16px;
+      background: rgba(108,99,255,0.07);
+      border: 1px solid rgba(108,99,255,0.2);
+      border-radius: 10px;
+      font-size: 12px;
+      color: var(--cinza-texto);
+      line-height: 1.7;
+    }
+
+    .senha-req span {
+      display: block;
+    }
+
+    .senha-req .req-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: color .2s;
+    }
+
+    .senha-req .req-item.ok {
+      color: var(--verde-neon);
+    }
+
+    .req-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--cinza-texto);
+      flex-shrink: 0;
+      transition: background .2s;
+    }
+
+    .req-item.ok .req-dot {
+      background: var(--verde-neon);
+    }
+
+    .input-pass-wrap {
+      position: relative;
+    }
+
+    .input-pass-wrap input {
+      padding-right: 44px;
+    }
+
+    .btn-toggle-pass {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--cinza-texto);
+      cursor: pointer;
+      font-size: 18px;
+      padding: 4px;
+      line-height: 1;
+    }
+
+    .btn-toggle-pass:hover {
+      color: var(--text-primary);
+    }
+
+    .strength-bar {
+      height: 4px;
+      border-radius: 2px;
+      background: var(--card-border);
+      margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .strength-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width .3s, background .3s;
+      width: 0%;
+    }
+
+    .btn-reset {
+      width: 100%;
+      padding: 14px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: opacity .2s, transform .1s;
+    }
+
+    .btn-reset:hover:not(:disabled) {
+      opacity: .9;
+    }
+
+    .btn-reset:active:not(:disabled) {
+      transform: scale(.98);
+    }
+
+    .btn-reset:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    .reset-back {
+      display: block;
+      text-align: center;
+      margin-top: 20px;
+      font-size: 13px;
+      color: var(--cinza-texto);
+      text-decoration: none;
+    }
+
+    .reset-back:hover {
+      color: var(--accent);
+    }
+
+    /* Estados */
+    #stateLoading,
+    #stateForm,
+    #stateSuccess,
+    #stateError {
+      display: none;
+    }
+
+    #stateLoading {
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--card-border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .state-success-icon {
+      font-size: 56px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .state-error-icon {
+      font-size: 56px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .alert-box {
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-top: 16px;
+      display: none;
+    }
+
+    .alert-box.erro {
+      background: rgba(255,71,87,0.1);
+      border: 1px solid rgba(255,71,87,0.3);
+      color: var(--vermelho-alerta);
+    }
+  </style>
+</head>
+<body>
+
+<div class="reset-page">
+  <div class="reset-box">
+
+    <div class="reset-logo">
+      <span class="reset-logo-icon">💪</span>
+      <h1>GestorFit</h1>
+    </div>
+
+    <!-- Carregando token -->
+    <div id="stateLoading">
+      <div class="loading-spinner"></div>
+      <p style="color:var(--cinza-texto);font-size:14px">Verificando link de redefinição…</p>
+    </div>
+
+    <!-- Formulário de nova senha -->
+    <div id="stateForm">
+      <h2>Criar nova senha</h2>
+      <p class="subtitle">Defina uma senha segura para sua conta de administrador.</p>
+
+      <div class="form-group">
+        <label>Nova Senha</label>
+        <div class="input-pass-wrap">
+          <input type="password" id="novaSenha" placeholder="••••••••" autocomplete="new-password">
+          <button class="btn-toggle-pass" type="button" onclick="toggleSenha('novaSenha', this)">👁</button>
+        </div>
+        <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+      </div>
+
+      <div class="senha-req" id="senhaReqs">
+        <span class="req-item" id="req-len"><span class="req-dot"></span>Mínimo 8 caracteres</span>
+        <span class="req-item" id="req-upper"><span class="req-dot"></span>Uma letra maiúscula</span>
+        <span class="req-item" id="req-num"><span class="req-dot"></span>Um número</span>
+        <span class="req-item" id="req-special"><span class="req-dot"></span>Um caractere especial (!@#$%...)</span>
+      </div>
+
+      <div class="form-group">
+        <label>Confirmar Senha</label>
+        <div class="input-pass-wrap">
+          <input type="password" id="confirmarSenha" placeholder="••••••••" autocomplete="new-password">
+          <button class="btn-toggle-pass" type="button" onclick="toggleSenha('confirmarSenha', this)">👁</button>
+        </div>
+      </div>
+
+      <div class="alert-box erro" id="alertErro"></div>
+
+      <button class="btn-reset" id="btnSalvar" onclick="salvarSenha()">
+        <span id="btnSalvarText">Salvar nova senha</span>
+      </button>
+
+      <a href="login.html" class="reset-back">← Voltar ao login</a>
+    </div>
+
+    <!-- Sucesso -->
+    <div id="stateSuccess">
+      <div class="state-success-icon">✅</div>
+      <h2>Senha definida!</h2>
+      <p class="subtitle">Sua nova senha foi salva com sucesso. Você será redirecionado para o login em instantes.</p>
+      <button class="btn-reset" onclick="location.href='login.html'" style="margin-top:8px">Ir para o login</button>
+    </div>
+
+    <!-- Erro — link inválido/expirado -->
+    <div id="stateError">
+      <div class="state-error-icon">⛔</div>
+      <h2>Link inválido</h2>
+      <p class="subtitle">Este link de redefinição expirou ou já foi utilizado.<br>Solicite um novo link na tela de login.</p>
+      <button class="btn-reset" onclick="location.href='login.html'">Voltar ao login</button>
+    </div>
+
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script>
+  const { createClient } = supabase;
+  const db = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+
+  function mostrar(id) {
+    ['stateLoading','stateForm','stateSuccess','stateError'].forEach(s => {
+      document.getElementById(s).style.display = s === id ? 'block' : 'none';
+    });
+  }
+
+  // Aguarda o evento de recuperação de senha do Supabase
+  mostrar('stateLoading');
+
+  db.auth.onAuthStateChange((event, session) => {
+    if (event === 'PASSWORD_RECOVERY') {
+      mostrar('stateForm');
+    } else if (event === 'SIGNED_IN' && session) {
+      // Pode chegar como SIGNED_IN em alguns fluxos — verifica o tipo na URL
+      const hash = window.location.hash;
+      if (hash.includes('type=recovery')) {
+        mostrar('stateForm');
+      }
+    }
+  });
+
+  // Fallback: se após 3s nenhum evento chegou, o link é inválido
+  setTimeout(() => {
+    const form = document.getElementById('stateForm');
+    if (form.style.display !== 'block') mostrar('stateError');
+  }, 3000);
+
+  // ── Força e requisitos da senha ───────────────────────
+  document.getElementById('novaSenha').addEventListener('input', e => {
+    atualizarForca(e.target.value);
+  });
+
+  function atualizarForca(val) {
+    const reqs = {
+      'req-len':     val.length >= 8,
+      'req-upper':   /[A-Z]/.test(val),
+      'req-num':     /\d/.test(val),
+      'req-special': /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(val),
+    };
+    let score = 0;
+    Object.entries(reqs).forEach(([id, ok]) => {
+      const el = document.getElementById(id);
+      el.classList.toggle('ok', ok);
+      if (ok) score++;
+    });
+    const fill = document.getElementById('strengthFill');
+    const pct = (score / 4) * 100;
+    const cor = score <= 1 ? '#FF4757' : score === 2 ? '#FFA502' : score === 3 ? '#f7c948' : '#00D4AA';
+    fill.style.width = pct + '%';
+    fill.style.background = cor;
+  }
+
+  function toggleSenha(id, btn) {
+    const inp = document.getElementById(id);
+    const show = inp.type === 'password';
+    inp.type = show ? 'text' : 'password';
+    btn.textContent = show ? '🙈' : '👁';
+  }
+
+  function mostrarErro(msg) {
+    const el = document.getElementById('alertErro');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  function ocultarErro() {
+    document.getElementById('alertErro').style.display = 'none';
+  }
+
+  async function salvarSenha() {
+    ocultarErro();
+    const senha = document.getElementById('novaSenha').value;
+    const confirma = document.getElementById('confirmarSenha').value;
+
+    if (senha.length < 8) { mostrarErro('A senha deve ter pelo menos 8 caracteres.'); return; }
+    if (!/[A-Z]/.test(senha)) { mostrarErro('Inclua ao menos uma letra maiúscula.'); return; }
+    if (!/\d/.test(senha)) { mostrarErro('Inclua ao menos um número.'); return; }
+    if (senha !== confirma) { mostrarErro('As senhas não coincidem.'); return; }
+
+    const btn = document.getElementById('btnSalvar');
+    const txt = document.getElementById('btnSalvarText');
+    btn.disabled = true;
+    txt.textContent = 'Salvando…';
+
+    try {
+      const { error } = await db.auth.updateUser({ password: senha });
+      if (error) throw error;
+      mostrar('stateSuccess');
+      setTimeout(() => { location.href = 'login.html'; }, 3000);
+    } catch (err) {
+      mostrarErro('Erro ao salvar: ' + (err.message || 'Tente novamente.'));
+      btn.disabled = false;
+      txt.textContent = 'Salvar nova senha';
+    }
+  }
+
+  // Enter no campo confirmar aciona o botão
+  document.getElementById('confirmarSenha').addEventListener('keydown', e => {
+    if (e.key === 'Enter') salvarSenha();
+  });
+</script>
+
+</body>
+</html>
