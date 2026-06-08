@@ -85,11 +85,12 @@ function sparkFromBase(base, pontos = 7, variacao = 0.15, crescente = true) {
 async function carregarDashboard() {
   const safe = fn => fn().catch(err => { console.warn(err); return null; });
 
-  const [metricas, vencimentos, inadimplentes, historico] = await Promise.all([
+  const [metricas, vencimentos, inadimplentes, historico, aniversariantes] = await Promise.all([
     safe(buscarMetricasMes),
     safe(() => buscarVencimentosProximos(7)),
     safe(buscarInadimplentes),
     safe(buscarReceitaUltimos6Meses),
+    safe(buscarAniversariantes),
   ]);
 
   _dadosVencimentos = vencimentos || [];
@@ -120,6 +121,7 @@ async function carregarDashboard() {
   }
 
   renderizarVencimentos(_dadosVencimentos);
+  renderizarAniversariantes(aniversariantes || []);
 }
 
 // ─────────────────────────────────────────────────
@@ -266,6 +268,49 @@ function renderizarVencimentos(lista) {
           <path d="M11.999 2C6.486 2 2 6.486 2 12c0 1.862.502 3.607 1.376 5.106L2 22l5.041-1.357A9.957 9.957 0 0 0 12 22c5.514 0 10-4.486 10-10S17.514 2 11.999 2zm0 18c-1.717 0-3.316-.47-4.695-1.285l-.337-.2-3.48.937.944-3.413-.22-.35A7.952 7.952 0 0 1 4 12c0-4.411 3.589-8 8-8 4.41 0 8 3.589 8 8s-3.59 8-8.001 8z"/>
         </svg>
       </button>
+    </div>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────────────
+// ANIVERSARIANTES DO DIA
+// ─────────────────────────────────────────────────
+
+function renderizarAniversariantes(lista) {
+  const container = document.getElementById('listaAniversariantes');
+  const badge     = document.getElementById('badgeAniversar');
+  if (!container) return;
+
+  if (badge) badge.textContent = lista.length > 0 ? lista.length : '';
+
+  if (!lista.length) {
+    container.innerHTML = `<div class="aniversar-vazio">Nenhum aniversariante hoje 😊</div>`;
+    return;
+  }
+
+  const anoAtual = new Date().getFullYear();
+  const WA_SVG = `<svg viewBox="0 0 24 24" fill="#25D366" width="14" height="14">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+    <path d="M11.999 2C6.486 2 2 6.486 2 12c0 1.862.502 3.607 1.376 5.106L2 22l5.041-1.357A9.957 9.957 0 0 0 12 22c5.514 0 10-4.486 10-10S17.514 2 11.999 2zm0 18c-1.717 0-3.316-.47-4.695-1.285l-.337-.2-3.48.937.944-3.413-.22-.35A7.952 7.952 0 0 1 4 12c0-4.411 3.589-8 8-8 4.41 0 8 3.589 8 8s-3.59 8-8.001 8z"/>
+  </svg>`;
+
+  container.innerHTML = lista.map((a, i) => {
+    const av    = AVATAR_COLORS[i % AVATAR_COLORS.length];
+    const tel   = (a.whatsapp || '').replace(/\D/g, '');
+    const idade = a.data_nascimento ? anoAtual - parseInt(a.data_nascimento.slice(0, 4)) : null;
+    const sub   = idade ? `${idade} anos hoje 🎉` : 'Aniversário hoje 🎉';
+    const msg   = encodeURIComponent(`🎂 Parabéns, ${a.nome}! Feliz aniversário! 🎉 Academia GestorFit deseja um ótimo dia!`);
+    const href  = tel ? `https://wa.me/55${tel}?text=${msg}` : null;
+
+    return `<div class="aniversar-item">
+      <div class="aniversar-avatar" style="background:${av.bg};color:${av.color}">${iniciais(a.nome)}</div>
+      <div class="aniversar-info">
+        <div class="aniversar-name">${a.nome}</div>
+        <div class="aniversar-age">${sub}</div>
+      </div>
+      ${href
+        ? `<a class="btn-parabens" href="${href}" target="_blank" rel="noopener">${WA_SVG} Parabenizar</a>`
+        : `<span class="btn-parabens" style="opacity:.5;cursor:default">${WA_SVG} Parabenizar</span>`}
     </div>`;
   }).join('');
 }

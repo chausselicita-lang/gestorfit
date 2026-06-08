@@ -139,7 +139,7 @@ async function buscarAniversariantes() {
   const dd = String(hoje.getDate()).padStart(2, '0');
 
   const { data } = await db.from('alunos')
-    .select('id, nome, data_nascimento')
+    .select('id, nome, data_nascimento, whatsapp')
     .eq('academia_id', aid)
     .eq('status', 'ativo')
     .not('data_nascimento', 'is', null);
