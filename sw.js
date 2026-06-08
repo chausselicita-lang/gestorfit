@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gestorfit-v8';
+const CACHE_NAME = 'gestorfit-v9';
 
 const STATIC_ASSETS = [
   '/gestorfit/css/main.css',
