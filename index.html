@@ -104,7 +104,37 @@
     }
     .header-academy-btn svg { flex-shrink: 0; }
 
-    .header-right { display: flex; align-items: center; gap: 10px; }
+    .header-right { display: flex; align-items: center; gap: 10px; position: relative; }
+
+    /* ── AVATAR DROPDOWN ── */
+    .avatar-dropdown {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 6px;
+      min-width: 168px;
+      z-index: 200;
+      box-shadow: 0 12px 40px rgba(0,0,0,.55);
+    }
+    .avatar-dropdown button {
+      width: 100%;
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px;
+      background: none; border: none; border-radius: 9px;
+      color: var(--txt1);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px; font-weight: 500;
+      cursor: pointer; text-align: left;
+      min-height: 0; transition: background .15s;
+    }
+    .avatar-dropdown button:hover { background: var(--card2); }
+    .avatar-dropdown button svg { width: 15px; height: 15px; stroke-width: 2; flex-shrink: 0; }
+    .avatar-dropdown .btn-sair { color: var(--red); }
+    .avatar-dropdown .btn-sair:hover { background: var(--red-dim); }
+    .avatar-dropdown hr { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
 
     .btn-bell {
       position: relative;
@@ -849,6 +879,22 @@
         <span class="notif-badge hidden" id="badgeVencimentos">0</span>
       </button>
       <div class="header-avatar" id="userAvatar">A</div>
+
+      <!-- Avatar dropdown -->
+      <div class="avatar-dropdown hidden" id="avatarDropdown">
+        <button id="btnTrocarFoto">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Trocar foto
+        </button>
+        <hr>
+        <button class="btn-sair" id="btnMenuSair">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Sair
+        </button>
+      </div>
+
+      <!-- Hidden file input for avatar -->
+      <input type="file" id="avatarFileInput" accept="image/*" style="display:none">
     </div>
   </header>
 

@@ -107,6 +107,8 @@ async function carregarDashboard() {
     }
   });
 
+  _carregarFotoSalva();
+
   const hoje         = new Date().toISOString().split('T')[0];
   const vencimentosHoje = _dadosVencimentos.filter(a => a.data_vencimento === hoje);
 
@@ -676,9 +678,62 @@ function configurarModais() {
   // Cobrar WA
   document.getElementById('btnCobrarWA')?.addEventListener('click', cobrarTodosWA);
 
-  // Logout via avatar
-  document.getElementById('userAvatar')?.addEventListener('click', async () => {
+  // ── AVATAR: dropdown toggle ──
+  const avatarEl  = document.getElementById('userAvatar');
+  const dropdown  = document.getElementById('avatarDropdown');
+  const fileInput = document.getElementById('avatarFileInput');
+
+  avatarEl?.addEventListener('click', e => {
+    e.stopPropagation();
+    dropdown?.classList.toggle('hidden');
+  });
+
+  document.addEventListener('click', () => dropdown?.classList.add('hidden'));
+
+  document.getElementById('btnTrocarFoto')?.addEventListener('click', () => {
+    dropdown?.classList.add('hidden');
+    fileInput?.click();
+  });
+
+  fileInput?.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const b64 = ev.target.result;
+      localStorage.setItem('gestorfit_avatar', b64);
+      _aplicarFotoAvatar(b64);
+      mostrarToast('Foto atualizada!', 'sucesso');
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  });
+
+  document.getElementById('btnMenuSair')?.addEventListener('click', async () => {
+    dropdown?.classList.add('hidden');
     const ok = await confirmarModal('Sair do sistema', 'Deseja encerrar a sessão?');
     if (ok) handleLogout();
   });
+}
+
+// ─────────────────────────────────────────────────
+// AVATAR FOTO
+// ─────────────────────────────────────────────────
+
+function _aplicarFotoAvatar(b64) {
+  const av = document.getElementById('userAvatar');
+  if (!av) return;
+  let img = av.querySelector('img');
+  if (!img) {
+    img = document.createElement('img');
+    av.insertBefore(img, av.firstChild);
+  }
+  img.src = b64;
+  img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;position:absolute;inset:0;';
+  av.style.position = 'relative';
+}
+
+function _carregarFotoSalva() {
+  const b64 = localStorage.getItem('gestorfit_avatar');
+  if (b64) _aplicarFotoAvatar(b64);
 }
