@@ -19,7 +19,7 @@
   background: rgba(255,255,255,0.03);
   padding: 12px 16px;
   text-align: left;
-  font-size: 13px;
+  font-size: 15px;
   color: #FFFFFF;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -86,7 +86,7 @@
 }
 
 .page-title-bar h2 { font-size: 22px; }
-.page-title-bar p { font-size: 15px; color: #FFFFFF; margin-top: 2px; line-height: 1.5; }
+.page-title-bar p { font-size: 16px; color: #FFFFFF; margin-top: 2px; line-height: 1.5; }
 
 /* ============================================
    ACTION BUTTONS in TABLE
@@ -139,7 +139,7 @@
   border-top: 1px solid var(--card-border);
 }
 
-.pagination-info { font-size: 14px; color: #FFFFFF; }
+.pagination-info { font-size: 15px; color: #FFFFFF; }
 
 .pagination-buttons { display: flex; gap: 6px; }
 
@@ -229,7 +229,7 @@
   display: flex;
   align-items: center;
   gap: var(--gap-sm);
-  font-size: 15px;
+  font-size: 16px;
   color: #FFFFFF;
   line-height: 1.5;
 }
@@ -302,7 +302,7 @@
 
 .login-divider {
   text-align: center;
-  font-size: 14px;
+  font-size: 15px;
   color: #FFFFFF;
   margin: var(--gap-sm) 0;
 }
