@@ -85,11 +85,11 @@ function sparkFromBase(base, pontos = 7, variacao = 0.15, crescente = true) {
 async function carregarDashboard() {
   const safe = fn => fn().catch(err => { console.warn(err); return null; });
 
-  const [metricas, vencimentos, inadimplentes, historico, aniversariantes] = await Promise.all([
+  // Fase 1 — dados essenciais (rápido): KPIs, vencimentos, aniversariantes
+  const [metricas, vencimentos, inadimplentes, aniversariantes] = await Promise.all([
     safe(buscarMetricasMes),
     safe(() => buscarVencimentosProximos(7)),
     safe(buscarInadimplentes),
-    safe(buscarReceitaUltimos6Meses),
     safe(buscarAniversariantes),
   ]);
 
@@ -100,21 +100,18 @@ async function carregarDashboard() {
     if (ac?.nome) {
       const el = document.getElementById('userName');
       if (el) el.textContent = ac.nome;
-
       const av = document.getElementById('userAvatar');
-      if (av) {
-        av.textContent = ac.nome.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-      }
+      if (av) av.textContent = ac.nome.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
     }
   });
 
   _carregarFotoSalva();
 
-  const hoje         = new Date().toISOString().split('T')[0];
+  const hoje = new Date().toISOString().split('T')[0];
   const vencimentosHoje = _dadosVencimentos.filter(a => a.data_vencimento === hoje);
 
   if (metricas) {
-    renderizarKPIs(metricas, vencimentosHoje, inadimplentes || [], historico || []);
+    renderizarKPIs(metricas, vencimentosHoje, inadimplentes || [], []);
     atualizarBadge(metricas, _dadosVencimentos);
     gerarNotificacoes(metricas, _dadosVencimentos);
     renderizarResumoFinanceiro(metricas, inadimplentes || []);
@@ -122,6 +119,16 @@ async function carregarDashboard() {
 
   renderizarVencimentos(_dadosVencimentos);
   renderizarAniversariantes(aniversariantes || []);
+
+  // Fase 2 — histórico para sparklines (pode ser mais lento, não bloqueia UI)
+  safe(buscarReceitaUltimos6Meses).then(historico => {
+    if (metricas && historico?.length) {
+      const sparkReceita = document.getElementById('sparkReceita');
+      if (sparkReceita) {
+        sparkReceita.innerHTML = gerarSparkline(historico.map(h => h.total), '#3B82F6');
+      }
+    }
+  });
 }
 
 // ─────────────────────────────────────────────────

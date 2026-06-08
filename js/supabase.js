@@ -296,17 +296,22 @@ async function buscarMetricasMes() {
 
 async function buscarReceitaUltimos6Meses() {
   const aid = await getAcademiaId();
-  const resultado = [];
-  for (let i = 5; i >= 0; i--) {
+  const meses = Array.from({ length: 6 }, (_, i) => {
     const d = new Date();
-    d.setMonth(d.getMonth() - i);
-    const mes = d.toISOString().slice(0, 7);
-    const { data } = await db.from('pagamentos').select('valor')
-      .eq('academia_id', aid).eq('referencia_mes', mes).eq('status', 'pago');
-    const total = data?.reduce((s, p) => s + parseFloat(p.valor), 0) || 0;
-    resultado.push({ mes, total });
-  }
-  return resultado;
+    d.setMonth(d.getMonth() - (5 - i));
+    return d.toISOString().slice(0, 7);
+  });
+  const resultados = await Promise.all(
+    meses.map(mes =>
+      db.from('pagamentos').select('valor')
+        .eq('academia_id', aid).eq('referencia_mes', mes).eq('status', 'pago')
+        .then(({ data }) => ({
+          mes,
+          total: (data || []).reduce((s, p) => s + parseFloat(p.valor), 0),
+        }))
+    )
+  );
+  return resultados;
 }
 
 // ─── RELATÓRIOS ───────────────────────────────────
