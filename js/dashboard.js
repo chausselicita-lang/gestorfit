@@ -1,4 +1,4 @@
-// js/dashboard.js — GestorFit Dashboard v4 Mobile-First
+// js/dashboard.js — GestorFit Dashboard v5
 
 const AVATAR_COLORS = [
   { color: '#00D48A', bg: 'rgba(0,212,138,.18)' },
@@ -9,9 +9,9 @@ const AVATAR_COLORS = [
   { color: '#14B8A6', bg: 'rgba(20,184,166,.18)' },
 ];
 
-let _notificacoes = [];
+let _notificacoes       = [];
 let _alunoAtualPagamento = null;
-let _dadosVencimentos = [];
+let _dadosVencimentos   = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
   const ok = await verificarAuth();
@@ -47,9 +47,9 @@ function gerarSparkline(valores, cor) {
     linePath += ` C${cpx.toFixed(1)},${py.toFixed(1)} ${cpx.toFixed(1)},${cy.toFixed(1)} ${cx.toFixed(1)},${cy.toFixed(1)}`;
   }
 
-  const last = coords[coords.length - 1];
+  const last     = coords[coords.length - 1];
   const areaPath = `${linePath} L${last[0].toFixed(1)},${H} L${coords[0][0].toFixed(1)},${H} Z`;
-  const uid = `sp${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
+  const uid      = `sp${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
 
   return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
@@ -68,7 +68,9 @@ function sparkFromBase(base, pontos = 7, variacao = 0.15, crescente = true) {
   let v = crescente ? base * 0.6 : base * 1.4;
   for (let i = 0; i < pontos - 1; i++) {
     const noise = (Math.random() - 0.5) * base * variacao;
-    const trend = crescente ? (base - base * 0.6) / (pontos - 1) : (base * 1.4 - base) / -(pontos - 1);
+    const trend = crescente
+      ? (base - base * 0.6) / (pontos - 1)
+      : (base * 1.4 - base) / -(pontos - 1);
     v = Math.max(0, v + trend + noise);
     arr.push(Math.round(v));
   }
@@ -97,13 +99,16 @@ async function carregarDashboard() {
     if (ac?.nome) {
       const el = document.getElementById('userName');
       if (el) el.textContent = ac.nome;
+
+      const av = document.getElementById('userAvatar');
+      if (av) {
+        av.textContent = ac.nome.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      }
     }
   });
 
-  const vencimentosHoje = (_dadosVencimentos).filter(a => {
-    const hoje = new Date().toISOString().split('T')[0];
-    return a.data_vencimento === hoje;
-  });
+  const hoje         = new Date().toISOString().split('T')[0];
+  const vencimentosHoje = _dadosVencimentos.filter(a => a.data_vencimento === hoje);
 
   if (metricas) {
     renderizarKPIs(metricas, vencimentosHoje, inadimplentes || [], historico || []);
@@ -120,14 +125,16 @@ async function carregarDashboard() {
 // ─────────────────────────────────────────────────
 
 function renderizarKPIs(m, vencHoje, inadimpl, historico) {
-  // Alunos Ativos
+
+  // ── Alunos Ativos
   const elAtivos = document.getElementById('kpiAtivos');
   if (elAtivos) elAtivos.textContent = m.totalAtivos;
 
   const subAtivos = document.getElementById('kpiAtivosSub');
   if (subAtivos) {
     if (m.totalAtivos > 0) {
-      subAtivos.textContent = `+${Math.max(1, Math.round(m.totalAtivos * 0.06))} este mês ↑`;
+      const novos = Math.max(1, Math.round(m.totalAtivos * 0.06));
+      subAtivos.textContent = `+${novos} este mês ↑`;
       subAtivos.className = 'kpi-sub up';
     } else {
       subAtivos.textContent = 'Nenhum ativo';
@@ -137,34 +144,33 @@ function renderizarKPIs(m, vencHoje, inadimpl, historico) {
 
   const sparkAtivos = document.getElementById('sparkAtivos');
   if (sparkAtivos) {
-    const data = sparkFromBase(m.totalAtivos || 10, 8, 0.08, true);
-    sparkAtivos.innerHTML = gerarSparkline(data, '#00D48A');
+    sparkAtivos.innerHTML = gerarSparkline(sparkFromBase(m.totalAtivos || 10, 8, 0.08, true), '#00D48A');
   }
 
-  // Receita do Mês
+  // ── Receita do Mês — sempre valor completo, sem abreviação
   const elReceita = document.getElementById('kpiReceita');
   if (elReceita) {
-    elReceita.textContent = m.receitaMes >= 1000
-      ? `R$ ${(m.receitaMes / 1000).toFixed(1)}k`
-      : formatarMoeda(m.receitaMes);
+    elReceita.textContent = formatarMoeda(m.receitaMes);
   }
 
   const subReceita = document.getElementById('kpiReceitaSub');
-  if (subReceita && m.receitaMesAnterior > 0) {
-    const pct = ((m.receitaMes - m.receitaMesAnterior) / m.receitaMesAnterior * 100).toFixed(0);
-    if (Number(pct) > 0) {
-      subReceita.textContent = `+${pct}% em relação ao mês passado`;
-      subReceita.className = 'kpi-sub up';
-    } else if (Number(pct) < 0) {
-      subReceita.textContent = `${pct}% em relação ao mês passado`;
-      subReceita.className = 'kpi-sub down';
+  if (subReceita) {
+    if (m.receitaMesAnterior > 0) {
+      const pct = Math.round((m.receitaMes - m.receitaMesAnterior) / m.receitaMesAnterior * 100);
+      if (pct > 0) {
+        subReceita.textContent = `+${pct}% em relação ao mês passado`;
+        subReceita.className = 'kpi-sub up';
+      } else if (pct < 0) {
+        subReceita.textContent = `${pct}% em relação ao mês passado`;
+        subReceita.className = 'kpi-sub down';
+      } else {
+        subReceita.textContent = 'Igual ao mês passado';
+        subReceita.className = 'kpi-sub neutral';
+      }
     } else {
-      subReceita.textContent = 'Igual ao mês passado';
+      subReceita.textContent = 'Primeiro mês registrado';
       subReceita.className = 'kpi-sub neutral';
     }
-  } else if (subReceita) {
-    subReceita.textContent = 'Primeiro mês registrado';
-    subReceita.className = 'kpi-sub neutral';
   }
 
   const sparkReceita = document.getElementById('sparkReceita');
@@ -175,7 +181,7 @@ function renderizarKPIs(m, vencHoje, inadimpl, historico) {
     sparkReceita.innerHTML = gerarSparkline(data, '#3B82F6');
   }
 
-  // Inadimplentes
+  // ── Inadimplentes
   const elInad = document.getElementById('kpiInadimpl');
   if (elInad) elInad.textContent = m.totalInadimplentes;
 
@@ -193,11 +199,10 @@ function renderizarKPIs(m, vencHoje, inadimpl, historico) {
   const sparkInad = document.getElementById('sparkInadimpl');
   if (sparkInad) {
     const base = m.totalInadimplentes || 1;
-    const data = sparkFromBase(base, 8, 0.25, m.totalInadimplentes === 0);
-    sparkInad.innerHTML = gerarSparkline(data, '#FF4444');
+    sparkInad.innerHTML = gerarSparkline(sparkFromBase(base, 8, 0.25, m.totalInadimplentes === 0), '#FF4444');
   }
 
-  // Vencem Hoje
+  // ── Vencem Hoje
   const elVencem = document.getElementById('kpiVencem');
   if (elVencem) elVencem.textContent = vencHoje.length;
 
@@ -215,8 +220,7 @@ function renderizarKPIs(m, vencHoje, inadimpl, historico) {
 
   const sparkVencem = document.getElementById('sparkVencem');
   if (sparkVencem) {
-    const data = sparkFromBase(Math.max(vencHoje.length, 1), 7, 0.3, true);
-    sparkVencem.innerHTML = gerarSparkline(data, '#F59E0B');
+    sparkVencem.innerHTML = gerarSparkline(sparkFromBase(Math.max(vencHoje.length, 1), 7, 0.3, true), '#F59E0B');
   }
 }
 
@@ -237,8 +241,8 @@ function renderizarVencimentos(lista) {
   hoje.setHours(0, 0, 0, 0);
 
   container.innerHTML = lista.slice(0, 5).map((a, i) => {
-    const av = AVATAR_COLORS[i % AVATAR_COLORS.length];
-    const dias = calcularDiasRestantes(a.data_vencimento);
+    const av    = AVATAR_COLORS[i % AVATAR_COLORS.length];
+    const dias  = calcularDiasRestantes(a.data_vencimento);
     const { label, cls } = urgenciaLabel(dias);
     const valor = formatarMoeda(a.planos_academia?.valor);
     const plano = a.planos_academia?.nome || 'Plano';
@@ -254,7 +258,7 @@ function renderizarVencimentos(lista) {
         <span class="venc-urgency ${cls}">${label}</span>
         <div class="venc-valor">${valor}</div>
       </div>
-      <button class="btn-wa" onclick="enviarCobrancaWA('${a.id}', '${tel}', '${encodeURIComponent(a.nome)}', '${encodeURIComponent(a.data_vencimento)}', '${encodeURIComponent(valor)}')" aria-label="Cobrar WhatsApp">
+      <button class="btn-wa" onclick="enviarCobrancaWA('${a.id}','${tel}','${encodeURIComponent(a.nome)}','${encodeURIComponent(a.data_vencimento)}','${encodeURIComponent(valor)}')" aria-label="Cobrar WhatsApp">
         <svg viewBox="0 0 24 24" fill="#25D366" width="22" height="22">
           <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
           <path d="M11.999 2C6.486 2 2 6.486 2 12c0 1.862.502 3.607 1.376 5.106L2 22l5.041-1.357A9.957 9.957 0 0 0 12 22c5.514 0 10-4.486 10-10S17.514 2 11.999 2zm0 18c-1.717 0-3.316-.47-4.695-1.285l-.337-.2-3.48.937.944-3.413-.22-.35A7.952 7.952 0 0 1 4 12c0-4.411 3.589-8 8-8 4.41 0 8 3.589 8 8s-3.59 8-8.001 8z"/>
@@ -265,11 +269,11 @@ function renderizarVencimentos(lista) {
 }
 
 function urgenciaLabel(dias) {
-  if (dias < 0)  return { label: 'Vencido',        cls: 'vencido' };
-  if (dias === 0) return { label: 'Vence hoje',      cls: 'hoje' };
-  if (dias === 1) return { label: 'Vence amanhã',    cls: 'amanha' };
-  if (dias === 2) return { label: 'Vence em 2 dias', cls: 'em2' };
-  return { label: `Vence em ${dias} dias`,           cls: 'em3' };
+  if (dias < 0)   return { label: 'Vencido',          cls: 'vencido' };
+  if (dias === 0) return { label: 'Vence hoje',        cls: 'hoje' };
+  if (dias === 1) return { label: 'Vence amanhã',      cls: 'amanha' };
+  if (dias === 2) return { label: 'Vence em 2 dias',   cls: 'em2' };
+  return           { label: `Vence em ${dias} dias`,   cls: 'em3' };
 }
 
 // ─────────────────────────────────────────────────
@@ -286,19 +290,22 @@ function renderizarResumoFinanceiro(metricas, inadimplentes) {
 
   const elRecSub = document.getElementById('resumoRecebidoSub');
   if (elRecSub && metricas.receitaMesAnterior > 0) {
-    const pct = ((metricas.receitaMes - metricas.receitaMesAnterior) / metricas.receitaMesAnterior * 100).toFixed(0);
-    elRecSub.textContent = Number(pct) >= 0 ? `+${pct}%` : `${pct}%`;
-    elRecSub.className = `resumo-col-sub ${Number(pct) >= 0 ? 'up' : 'down'}`;
+    const pct = Math.round((metricas.receitaMes - metricas.receitaMesAnterior) / metricas.receitaMesAnterior * 100);
+    elRecSub.textContent = pct >= 0 ? `+${pct}%` : `${pct}%`;
+    elRecSub.className   = `resumo-col-sub ${pct >= 0 ? 'up' : 'down'}`;
   } else if (elRecSub) {
     elRecSub.textContent = '';
   }
 
-  setEl('resumoAReceber', formatarMoeda(metricas.valorInadimplente));
-  setEl('resumoAReceberSub', `${inadimplentes.length} título${inadimplentes.length !== 1 ? 's' : ''}`);
+  // A receber = valor total dos inadimplentes (contas em aberto)
+  const totalAReceber = inadimplentes.reduce((s, a) => s + parseFloat(a.planos_academia?.valor || 0), 0);
+  setEl('resumoAReceber', formatarMoeda(totalAReceber));
+  const qtd = inadimplentes.length;
+  setEl('resumoAReceberSub', `${qtd} título${qtd !== 1 ? 's' : ''}`);
 
-  const vencidosValor = inadimplentes.reduce((s, a) => s + parseFloat(a.planos_academia?.valor || 0), 0);
-  setEl('resumoVencidos', formatarMoeda(vencidosValor));
-  setEl('resumoVencidosSub', `${inadimplentes.length} título${inadimplentes.length !== 1 ? 's' : ''}`);
+  // Vencidos
+  setEl('resumoVencidos', formatarMoeda(totalAReceber));
+  setEl('resumoVencidosSub', `${qtd} título${qtd !== 1 ? 's' : ''}`);
 }
 
 // ─────────────────────────────────────────────────
@@ -306,11 +313,9 @@ function renderizarResumoFinanceiro(metricas, inadimplentes) {
 // ─────────────────────────────────────────────────
 
 function atualizarBadge(metricas, vencimentos) {
-  const total = metricas.totalInadimplentes + vencimentos.filter(a => {
-    const d = calcularDiasRestantes(a.data_vencimento);
-    return d <= 0;
-  }).length;
-  const badge = document.getElementById('badgeVencimentos');
+  const vencidosHoje = vencimentos.filter(a => calcularDiasRestantes(a.data_vencimento) <= 0).length;
+  const total        = metricas.totalInadimplentes + vencidosHoje;
+  const badge        = document.getElementById('badgeVencimentos');
   if (!badge) return;
   if (total > 0) {
     badge.textContent = total > 99 ? '99+' : total;
@@ -322,6 +327,7 @@ function atualizarBadge(metricas, vencimentos) {
 
 function gerarNotificacoes(metricas, vencimentos) {
   _notificacoes = [];
+
   if (metricas.totalInadimplentes > 0) {
     _notificacoes.push({
       tipo: 'danger',
@@ -331,18 +337,20 @@ function gerarNotificacoes(metricas, vencimentos) {
       lido: false,
     });
   }
+
   vencimentos.forEach(a => {
     const dias = calcularDiasRestantes(a.data_vencimento);
     if (dias <= 1) {
       _notificacoes.push({
-        tipo: dias <= 0 ? 'danger' : 'warning',
+        tipo:   dias <= 0 ? 'danger' : 'warning',
         titulo: `Vencimento: ${a.nome}`,
-        desc: dias <= 0 ? `Vencido em ${formatarData(a.data_vencimento)}` : 'Vence hoje',
-        tempo: formatarData(a.data_vencimento),
-        lido: false,
+        desc:   dias <= 0 ? `Vencido em ${formatarData(a.data_vencimento)}` : 'Vence hoje',
+        tempo:  formatarData(a.data_vencimento),
+        lido:   false,
       });
     }
   });
+
   renderizarPainelNotif();
 }
 
@@ -352,7 +360,10 @@ function renderizarPainelNotif() {
 
   if (!_notificacoes.length) {
     el.innerHTML = `<div class="notif-empty">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="36" height="36"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="36" height="36">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
       Sem notificações
     </div>`;
     return;
@@ -405,9 +416,10 @@ async function enviarCobrancaWA(alunoId, tel, nomeEnc, dataEnc, valorEnc) {
   const nome  = decodeURIComponent(nomeEnc);
   const data  = decodeURIComponent(dataEnc);
   const valor = decodeURIComponent(valorEnc);
-  const msg   = `Olá ${nome}! 👋\n\nSua mensalidade de *${valor}* na *GestorFit* venceu em *${formatarData(data)}*.\n\nEvite a suspensão do seu plano — regularize agora mesmo! 💪\n\nQualquer dúvida, estamos à disposição.`;
 
   if (!tel) { mostrarToast('Aluno sem WhatsApp cadastrado', 'aviso'); return; }
+
+  const msg = `Olá ${nome}! 👋\n\nSua mensalidade de *${valor}* venceu em *${formatarData(data)}*.\n\nEvite a suspensão do seu plano — regularize agora! 💪\n\nQualquer dúvida, estamos à disposição.`;
 
   try {
     await enviarWhatsApp(tel, msg);
@@ -432,12 +444,11 @@ async function cobrarTodosWA() {
     const btn = document.getElementById('btnCobrarWA');
     if (btn) btn.disabled = true;
 
-    let enviados = 0;
-    let falhas   = 0;
+    let enviados = 0, falhas = 0;
     for (const a of todos) {
       if (!a.whatsapp) { falhas++; continue; }
       const valor = formatarMoeda(a.planos_academia?.valor);
-      const msg   = `Olá ${a.nome}! 👋\n\nSua mensalidade de *${valor}* na *GestorFit* venceu em *${formatarData(a.data_vencimento)}*.\n\nEvite a suspensão do seu plano — regularize agora mesmo! 💪`;
+      const msg   = `Olá ${a.nome}! 👋\n\nSua mensalidade de *${valor}* venceu em *${formatarData(a.data_vencimento)}*.\n\nEvite a suspensão do seu plano — regularize agora! 💪`;
       try { await enviarWhatsApp(a.whatsapp, msg); enviados++; }
       catch { falhas++; }
       await new Promise(r => setTimeout(r, 500));
@@ -461,9 +472,12 @@ async function abrirModalNovoAluno() {
       const planos = await buscarPlanos();
       select.innerHTML = '<option value="">Selecionar plano</option>' +
         planos.map(p => `<option value="${p.id}" data-duracao="${p.duracao_dias}" data-valor="${p.valor}">${p.nome} — ${formatarMoeda(p.valor)}</option>`).join('');
-    } catch { select.innerHTML = '<option value="">Erro ao carregar planos</option>'; }
+    } catch {
+      select.innerHTML = '<option value="">Erro ao carregar planos</option>';
+    }
   }
-  const hoje = new Date().toISOString().split('T')[0];
+
+  const hoje    = new Date().toISOString().split('T')[0];
   const inicioEl = document.getElementById('alunoInicio');
   if (inicioEl) inicioEl.value = hoje;
 
@@ -525,6 +539,7 @@ async function handleSalvarAluno() {
       observacoes:     document.getElementById('alunoObs')?.value || null,
       status:          'ativo',
     });
+
     mostrarToast('Aluno cadastrado com sucesso!', 'sucesso');
     fecharModalNovoAluno();
     await carregarDashboard();
@@ -548,7 +563,6 @@ async function abrirModalPagamento(alunoId) {
     _alunoAtualPagamento = todos.find(a => a.id === alunoId);
     if (!_alunoAtualPagamento) return;
 
-    const av = AVATAR_COLORS[0];
     const infoEl = document.getElementById('alunoInfoPagamento');
     if (infoEl) {
       infoEl.innerHTML = `<div class="aluno-mini">
@@ -595,13 +609,13 @@ async function handleConfirmarPagamento() {
 
   try {
     const pagamento = await registrarPagamento({
-      aluno_id:         _alunoAtualPagamento.id,
+      aluno_id:           _alunoAtualPagamento.id,
       valor,
-      data_pagamento:   data,
-      data_vencimento:  _alunoAtualPagamento.data_vencimento,
-      forma_pagamento:  forma,
-      referencia_mes:   ref,
-      status:           'pago',
+      data_pagamento:     data,
+      data_vencimento:    _alunoAtualPagamento.data_vencimento,
+      forma_pagamento:    forma,
+      referencia_mes:     ref,
+      status:             'pago',
       plano_duracao_dias: _alunoAtualPagamento.planos_academia?.duracao_dias,
     });
 
@@ -626,6 +640,7 @@ async function handleConfirmarPagamento() {
 // ─────────────────────────────────────────────────
 
 function configurarModais() {
+
   // Novo Aluno
   document.getElementById('btnNovoAluno')?.addEventListener('click', abrirModalNovoAluno);
   document.getElementById('fecharModal')?.addEventListener('click', fecharModalNovoAluno);
@@ -634,7 +649,6 @@ function configurarModais() {
   document.getElementById('modalNovoAluno')?.addEventListener('click', e => {
     if (e.target.id === 'modalNovoAluno') fecharModalNovoAluno();
   });
-
   document.getElementById('alunoPlano')?.addEventListener('change', calcularVencimento);
   document.getElementById('alunoInicio')?.addEventListener('change', calcularVencimento);
 
@@ -646,12 +660,11 @@ function configurarModais() {
     if (e.target.id === 'modalPagamento') fecharModalPagamento();
   });
 
-  // Novo Recebimento — abre modal de pagamento sem aluno pré-selecionado
+  // Novo Recebimento
   document.getElementById('btnNovoRecebimento')?.addEventListener('click', async () => {
     try {
       const alunos = await buscarAlunos({ status: 'ativo' });
       if (!alunos.length) { mostrarToast('Nenhum aluno ativo', 'aviso'); return; }
-      // abre com o primeiro inadimplente ou primeiro ativo
       const inadimpl = await buscarInadimplentes();
       const alvo = inadimpl[0] || alunos[0];
       abrirModalPagamento(alvo.id);
