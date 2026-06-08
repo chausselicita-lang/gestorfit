@@ -151,36 +151,43 @@ async function buscarAniversariantes() {
   });
 }
 
-// ─── STORAGE — AVATAR ─────────────────────────────
+// ─── AVATAR — Canvas resize + auth metadata (cross-device) ───
 
 async function uploadAvatarStorage(file) {
-  const { data: { user }, error: userErr } = await db.auth.getUser();
-  if (userErr || !user) throw new Error('Usuário não autenticado');
-
-  const ext = (['jpg','jpeg','png','webp'].includes(file.name.split('.').pop()?.toLowerCase())
-    ? file.name.split('.').pop().toLowerCase() : 'jpg');
-  const path = `${user.id}/avatar.${ext}`;
-
-  const { error } = await db.storage.from('avatars').upload(path, file, {
-    contentType: file.type || 'image/jpeg',
-    upsert: true,
-    cacheControl: '3600',
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Falha ao ler arquivo'));
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Imagem inválida'));
+      img.onload = async () => {
+        try {
+          const SIZE = 200;
+          const canvas = document.createElement('canvas');
+          canvas.width = SIZE; canvas.height = SIZE;
+          const ctx = canvas.getContext('2d');
+          const sz = Math.min(img.naturalWidth, img.naturalHeight);
+          const sx = (img.naturalWidth - sz) / 2;
+          const sy = (img.naturalHeight - sz) / 2;
+          ctx.drawImage(img, sx, sy, sz, sz, 0, 0, SIZE, SIZE);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+          localStorage.setItem('gestorfit_avatar', dataUrl);
+          const { error } = await db.auth.updateUser({ data: { avatar_url: dataUrl } });
+          if (error) console.warn('avatar meta:', error.message);
+          resolve(dataUrl);
+        } catch (err) { reject(err); }
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
   });
-  if (error) throw error;
-
-  const { data: { publicUrl } } = db.storage.from('avatars').getPublicUrl(path);
-
-  // Persiste URL nos metadados do usuário
-  await db.auth.updateUser({ data: { avatar_url: publicUrl } });
-
-  return publicUrl;
 }
 
 async function carregarAvatarUrl() {
   try {
     const { data: { user } } = await db.auth.getUser();
-    return user?.user_metadata?.avatar_url || null;
-  } catch { return null; }
+    return user?.user_metadata?.avatar_url || localStorage.getItem('gestorfit_avatar') || null;
+  } catch { return localStorage.getItem('gestorfit_avatar') || null; }
 }
 
 // ─── PLANOS ───────────────────────────────────────
