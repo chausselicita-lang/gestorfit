@@ -106,35 +106,109 @@
 
     .header-right { display: flex; align-items: center; gap: 10px; position: relative; }
 
-    /* ── AVATAR DROPDOWN ── */
-    .avatar-dropdown {
-      position: absolute;
-      top: calc(100% + 10px);
-      right: 0;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 6px;
-      min-width: 168px;
-      z-index: 200;
-      box-shadow: 0 12px 40px rgba(0,0,0,.55);
+    /* ── PROFILE MODAL ── */
+    .profile-overlay {
+      position: fixed; inset: 0; z-index: 90;
+      background: rgba(0,0,0,.78);
+      display: flex; align-items: flex-end; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity .22s;
     }
-    .avatar-dropdown button {
-      width: 100%;
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 12px;
-      background: none; border: none; border-radius: 9px;
-      color: var(--txt1);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 13px; font-weight: 500;
-      cursor: pointer; text-align: left;
-      min-height: 0; transition: background .15s;
+    .profile-overlay.active { opacity: 1; pointer-events: all; }
+    .profile-sheet {
+      background: #111420;
+      border-radius: 24px 24px 0 0;
+      width: 100%; max-width: 430px;
+      padding-bottom: env(safe-area-inset-bottom);
+      transform: translateY(100%);
+      transition: transform .32s cubic-bezier(.4,0,.2,1);
     }
-    .avatar-dropdown button:hover { background: var(--card2); }
-    .avatar-dropdown button svg { width: 15px; height: 15px; stroke-width: 2; flex-shrink: 0; }
-    .avatar-dropdown .btn-sair { color: var(--red); }
-    .avatar-dropdown .btn-sair:hover { background: var(--red-dim); }
-    .avatar-dropdown hr { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
+    .profile-overlay.active .profile-sheet { transform: translateY(0); }
+    .profile-drag { width: 40px; height: 4px; background: rgba(255,255,255,.12); border-radius: 2px; margin: 14px auto 4px; }
+    .profile-hd {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 20px 16px;
+    }
+    .profile-hd h2 { font-size: 17px; font-weight: 700; }
+    .profile-av-section {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 8px 20px 20px; gap: 14px;
+    }
+    .profile-av-ring { position: relative; width: 100px; height: 100px; }
+    .profile-av-circle {
+      width: 100px; height: 100px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 36px; font-weight: 800; color: #fff;
+      background: linear-gradient(135deg, #00D48A, #3B82F6);
+      overflow: hidden;
+      border: 3px solid transparent;
+      transition: border-color .2s;
+      cursor: pointer;
+    }
+    .profile-av-circle.has-photo { border-color: #00D48A; }
+    .profile-av-circle img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .profile-cam-btn {
+      position: absolute; bottom: 2px; right: 2px;
+      width: 30px; height: 30px; min-height: 0;
+      background: #6C63FF; border: 2.5px solid #111420;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+    }
+    .profile-cam-btn svg { width: 14px; height: 14px; stroke: white; fill: none; stroke-width: 2.2; }
+    .profile-preview-row { display: none; flex-direction: column; align-items: center; gap: 8px; }
+    .profile-preview-row.show { display: flex; }
+    .profile-preview-img { width: 68px; height: 68px; border-radius: 50%; object-fit: cover; border: 2px solid #6C63FF; }
+    .profile-preview-lbl { font-size: 12px; color: #9CA3AF; }
+    .profile-form-area { padding: 0 20px; }
+    .profile-form-area label {
+      display: block; font-size: 11px; font-weight: 700;
+      color: #9CA3AF; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 8px;
+    }
+    .profile-form-area input {
+      width: 100%; background: rgba(255,255,255,.05);
+      border: 1.5px solid rgba(255,255,255,.1); border-radius: 12px;
+      padding: 14px 16px; color: #F9FAFB;
+      font-family: 'DM Sans', sans-serif; font-size: 15px;
+      outline: none; -webkit-appearance: none;
+    }
+    .profile-form-area input:focus { border-color: #6C63FF; box-shadow: 0 0 0 3px rgba(108,99,255,.18); }
+    .profile-footer {
+      display: flex; gap: 10px; padding: 20px;
+      border-top: 1px solid rgba(255,255,255,.07); margin-top: 20px;
+    }
+    .btn-prof-cancel {
+      flex: 1; height: 48px;
+      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+      border-radius: 12px; color: #9CA3AF;
+      font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer;
+    }
+    .btn-prof-save {
+      flex: 2; height: 48px; background: #6C63FF; border: none;
+      border-radius: 12px; color: white;
+      font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: background .18s;
+    }
+    .btn-prof-save:hover { background: #7c74ff; }
+    .btn-prof-save:disabled { opacity: .5; cursor: default; }
+    .prof-spinner {
+      width: 18px; height: 18px; flex-shrink: 0;
+      border: 2px solid rgba(255,255,255,.3); border-top-color: white;
+      border-radius: 50%; animation: spin .7s linear infinite;
+    }
+    .profile-sair-row {
+      display: flex; justify-content: center; padding: 0 20px 20px;
+    }
+    .btn-prof-sair {
+      background: none; border: none; cursor: pointer;
+      font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
+      color: var(--red); display: flex; align-items: center; gap: 6px; min-height: 0;
+    }
+    .btn-prof-sair svg { width: 14px; height: 14px; stroke: currentColor; fill: none; }
+    /* header avatar with photo */
+    .header-avatar.has-photo { border: 2.5px solid #00D48A; overflow: hidden; padding: 0; }
+    .header-avatar.has-photo img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 
     .btn-bell {
       position: relative;
@@ -940,22 +1014,6 @@
         <span class="notif-badge hidden" id="badgeVencimentos">0</span>
       </button>
       <div class="header-avatar" id="userAvatar">A</div>
-
-      <!-- Avatar dropdown -->
-      <div class="avatar-dropdown hidden" id="avatarDropdown">
-        <button id="btnTrocarFoto">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          Trocar foto
-        </button>
-        <hr>
-        <button class="btn-sair" id="btnMenuSair">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-          Sair
-        </button>
-      </div>
-
-      <!-- Hidden file input for avatar -->
-      <input type="file" id="avatarFileInput" accept="image/*" style="display:none">
     </div>
   </header>
 
@@ -1300,6 +1358,49 @@
     </div>
   </div>
 </div>
+
+<!-- ─────── PROFILE MODAL ─────── -->
+<div class="profile-overlay" id="profileOverlay">
+  <div class="profile-sheet">
+    <div class="profile-drag"></div>
+    <div class="profile-hd">
+      <h2>Perfil da Academia</h2>
+      <button class="btn-icon-close" id="btnCloseProfile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="profile-av-section">
+      <div class="profile-av-ring">
+        <div class="profile-av-circle" id="profileAvCircle">A</div>
+        <button class="profile-cam-btn" id="btnProfileCam" aria-label="Trocar foto">
+          <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </button>
+      </div>
+      <div class="profile-preview-row" id="profilePreviewRow">
+        <img id="profilePreviewImg" class="profile-preview-img" src="" alt="Preview">
+        <span class="profile-preview-lbl">Nova foto — salve para confirmar</span>
+      </div>
+    </div>
+    <div class="profile-form-area">
+      <label>Nome da Academia</label>
+      <input type="text" id="profileNomeInput" placeholder="Nome da academia" maxlength="80" autocomplete="off">
+    </div>
+    <div class="profile-footer">
+      <button class="btn-prof-cancel" id="btnProfCancel">Cancelar</button>
+      <button class="btn-prof-save" id="btnProfSave">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="17" height="17"><polyline points="20 6 9 17 4 12"/></svg>
+        Salvar
+      </button>
+    </div>
+    <div class="profile-sair-row">
+      <button class="btn-prof-sair" id="btnProfSair">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Encerrar sessão
+      </button>
+    </div>
+  </div>
+</div>
+<input type="file" id="profileFileInput" accept="image/jpeg,image/png,image/webp" style="display:none">
 
 <script src="js/config.js"></script>
 <script src="js/supabase.js"></script>

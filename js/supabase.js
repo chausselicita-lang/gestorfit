@@ -151,6 +151,38 @@ async function buscarAniversariantes() {
   });
 }
 
+// ─── STORAGE — AVATAR ─────────────────────────────
+
+async function uploadAvatarStorage(file) {
+  const { data: { user }, error: userErr } = await db.auth.getUser();
+  if (userErr || !user) throw new Error('Usuário não autenticado');
+
+  const ext = (['jpg','jpeg','png','webp'].includes(file.name.split('.').pop()?.toLowerCase())
+    ? file.name.split('.').pop().toLowerCase() : 'jpg');
+  const path = `${user.id}/avatar.${ext}`;
+
+  const { error } = await db.storage.from('avatars').upload(path, file, {
+    contentType: file.type || 'image/jpeg',
+    upsert: true,
+    cacheControl: '3600',
+  });
+  if (error) throw error;
+
+  const { data: { publicUrl } } = db.storage.from('avatars').getPublicUrl(path);
+
+  // Persiste URL nos metadados do usuário
+  await db.auth.updateUser({ data: { avatar_url: publicUrl } });
+
+  return publicUrl;
+}
+
+async function carregarAvatarUrl() {
+  try {
+    const { data: { user } } = await db.auth.getUser();
+    return user?.user_metadata?.avatar_url || null;
+  } catch { return null; }
+}
+
 // ─── PLANOS ───────────────────────────────────────
 
 async function buscarPlanos() {

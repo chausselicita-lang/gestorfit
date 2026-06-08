@@ -723,62 +723,155 @@ function configurarModais() {
   // Cobrar WA
   document.getElementById('btnCobrarWA')?.addEventListener('click', cobrarTodosWA);
 
-  // ── AVATAR: dropdown toggle ──
-  const avatarEl  = document.getElementById('userAvatar');
-  const dropdown  = document.getElementById('avatarDropdown');
-  const fileInput = document.getElementById('avatarFileInput');
-
-  avatarEl?.addEventListener('click', e => {
-    e.stopPropagation();
-    dropdown?.classList.toggle('hidden');
-  });
-
-  document.addEventListener('click', () => dropdown?.classList.add('hidden'));
-
-  document.getElementById('btnTrocarFoto')?.addEventListener('click', () => {
-    dropdown?.classList.add('hidden');
-    fileInput?.click();
-  });
-
-  fileInput?.addEventListener('change', e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const b64 = ev.target.result;
-      localStorage.setItem('gestorfit_avatar', b64);
-      _aplicarFotoAvatar(b64);
-      mostrarToast('Foto atualizada!', 'sucesso');
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
-  });
-
-  document.getElementById('btnMenuSair')?.addEventListener('click', async () => {
-    dropdown?.classList.add('hidden');
-    const ok = await confirmarModal('Sair do sistema', 'Deseja encerrar a sessão?');
-    if (ok) handleLogout();
-  });
+  // ── AVATAR: abre modal de perfil ──
+  document.getElementById('userAvatar')?.addEventListener('click', abrirModalPerfil);
+  configurarModalPerfil();
 }
 
 // ─────────────────────────────────────────────────
 // AVATAR FOTO
 // ─────────────────────────────────────────────────
 
-function _aplicarFotoAvatar(b64) {
+function _aplicarFotoAvatar(src) {
   const av = document.getElementById('userAvatar');
   if (!av) return;
   let img = av.querySelector('img');
   if (!img) {
     img = document.createElement('img');
-    av.insertBefore(img, av.firstChild);
+    av.textContent = '';
+    av.appendChild(img);
   }
-  img.src = b64;
-  img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;position:absolute;inset:0;';
-  av.style.position = 'relative';
+  img.src = src;
+  img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;';
+  av.classList.add('has-photo');
 }
 
-function _carregarFotoSalva() {
+async function _carregarFotoSalva() {
+  try {
+    const url = await carregarAvatarUrl();
+    if (url) { _aplicarFotoAvatar(url); return; }
+  } catch {}
   const b64 = localStorage.getItem('gestorfit_avatar');
   if (b64) _aplicarFotoAvatar(b64);
+}
+
+// ─────────────────────────────────────────────────
+// MODAL DE PERFIL
+// ─────────────────────────────────────────────────
+
+let _profileFile = null;
+
+function abrirModalPerfil() {
+  document.getElementById('profileOverlay')?.classList.add('active');
+  _carregarDadosPerfil();
+}
+
+function fecharModalPerfil() {
+  document.getElementById('profileOverlay')?.classList.remove('active');
+  _profileFile = null;
+  document.getElementById('profilePreviewRow')?.classList.remove('show');
+  const img = document.getElementById('profilePreviewImg');
+  if (img) img.src = '';
+}
+
+async function _carregarDadosPerfil() {
+  try {
+    const circle = document.getElementById('profileAvCircle');
+    // Tenta foto salva
+    const url = await carregarAvatarUrl() || localStorage.getItem('gestorfit_avatar');
+    if (url && circle) {
+      circle.innerHTML = `<img src="${url}" alt="Avatar">`;
+      circle.classList.add('has-photo');
+    } else if (circle) {
+      const ac = await buscarAcademia();
+      circle.textContent = (ac?.nome || 'A').charAt(0).toUpperCase();
+      circle.classList.remove('has-photo');
+    }
+    // Nome da academia
+    const ac = await buscarAcademia();
+    const nomeEl = document.getElementById('profileNomeInput');
+    if (nomeEl && ac?.nome) nomeEl.value = ac.nome;
+  } catch (e) { console.warn('perfil load:', e); }
+}
+
+function configurarModalPerfil() {
+  const overlay   = document.getElementById('profileOverlay');
+  const fileInput = document.getElementById('profileFileInput');
+
+  document.getElementById('btnCloseProfile')?.addEventListener('click', fecharModalPerfil);
+  document.getElementById('btnProfCancel')?.addEventListener('click', fecharModalPerfil);
+  overlay?.addEventListener('click', e => { if (e.target === overlay) fecharModalPerfil(); });
+
+  document.getElementById('btnProfileCam')?.addEventListener('click', () => fileInput?.click());
+  document.getElementById('profileAvCircle')?.addEventListener('click', () => fileInput?.click());
+
+  fileInput?.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      mostrarToast('Foto deve ter no máximo 2MB', 'erro'); e.target.value = ''; return;
+    }
+    _profileFile = file;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = document.getElementById('profilePreviewImg');
+      if (img) img.src = ev.target.result;
+      document.getElementById('profilePreviewRow')?.classList.add('show');
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  });
+
+  document.getElementById('btnProfSave')?.addEventListener('click', _handleSalvarPerfil);
+
+  document.getElementById('btnProfSair')?.addEventListener('click', async () => {
+    fecharModalPerfil();
+    const ok = await confirmarModal('Encerrar sessão', 'Deseja sair do GestorFit?');
+    if (ok) handleLogout();
+  });
+}
+
+async function _handleSalvarPerfil() {
+  const btn = document.getElementById('btnProfSave');
+  const orig = btn?.innerHTML;
+  if (btn) { btn.disabled = true; btn.innerHTML = '<div class="prof-spinner"></div> Salvando...'; }
+
+  try {
+    // 1. Upload foto
+    if (_profileFile) {
+      let avatarSrc;
+      try {
+        avatarSrc = await uploadAvatarStorage(_profileFile);
+      } catch {
+        // Fallback: localStorage
+        avatarSrc = await new Promise(r => {
+          const rd = new FileReader();
+          rd.onload = e => r(e.target.result);
+          rd.readAsDataURL(_profileFile);
+        });
+        localStorage.setItem('gestorfit_avatar', avatarSrc);
+      }
+      _aplicarFotoAvatar(avatarSrc);
+      // Atualiza círculo no modal
+      const circle = document.getElementById('profileAvCircle');
+      if (circle) { circle.innerHTML = `<img src="${avatarSrc}" alt="Avatar">`; circle.classList.add('has-photo'); }
+      document.getElementById('profilePreviewRow')?.classList.remove('show');
+      _profileFile = null;
+    }
+
+    // 2. Salvar nome da academia
+    const nome = document.getElementById('profileNomeInput')?.value.trim();
+    if (nome) {
+      await atualizarAcademia({ nome });
+      const el = document.getElementById('userName');
+      if (el) el.textContent = nome;
+    }
+
+    mostrarToast('Perfil atualizado com sucesso!', 'sucesso');
+    fecharModalPerfil();
+  } catch (err) {
+    mostrarToast('Erro ao salvar: ' + (err.message || err), 'erro');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = orig; }
+  }
 }
