@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gestorfit-v11';
+const CACHE_NAME = 'gestorfit-v12';
 
 const STATIC_ASSETS = [
   '/gestorfit/css/main.css',
@@ -23,9 +23,10 @@ self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
       Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-    )
+    ).then(() => self.clients.claim())
+      .then(() => self.clients.matchAll({ type: 'window' }))
+      .then(clients => clients.forEach(c => c.navigate(c.url)))
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', e => {
