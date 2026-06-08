@@ -78,11 +78,11 @@
 .kpi-trend-badge svg { width: 10px; height: 10px; stroke: currentColor; fill: none; }
 
 .kpi-value { font-size: 30px; font-weight: 700; line-height: 1; letter-spacing: -0.5px; color: var(--text-primary); margin-bottom: 6px; }
-.kpi-label { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.7px; }
-.kpi-sub   { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+.kpi-label { font-size: 13px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.7px; }
+.kpi-sub   { font-size: 14px; color: var(--text-secondary); margin-top: 4px; line-height: 1.5; }
 
 .birthday-mini-list { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; max-height: 52px; overflow: hidden; }
-.birthday-mini-item { font-size: 11px; color: var(--yellow); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.birthday-mini-item { font-size: 13px; color: var(--yellow); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* ── CHARTS + RECENT (3 columns) ── */
 .charts-and-recent {
@@ -100,8 +100,8 @@
 }
 
 .card-header { display: flex; align-items: center; justify-content: space-between; padding: 16px var(--gap-md); border-bottom: 1px solid var(--border); }
-.card-header h3 { font-size: 14px; font-weight: 700; }
-.card-header-meta { font-size: 12px; color: var(--text-secondary); }
+.card-header h3 { font-size: 15px; font-weight: 700; }
+.card-header-meta { font-size: 14px; color: var(--text-secondary); }
 
 .link-ver-todos { font-size: 12px; color: var(--green); font-weight: 500; transition: color 0.18s; }
 .link-ver-todos:hover { color: #1aff95; text-decoration: underline; }
@@ -118,7 +118,7 @@
 .donut-body { padding: 16px var(--gap-md) var(--gap-md); flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .donut-container { position: relative; width: 140px; height: 140px; margin: 0 auto 16px; }
 .donut-legend { display: flex; flex-direction: column; gap: 8px; width: 100%; }
-.donut-legend-item { display: flex; align-items: center; justify-content: space-between; font-size: 12px; }
+.donut-legend-item { display: flex; align-items: center; justify-content: space-between; font-size: 14px; line-height: 1.5; }
 .donut-legend-label { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); }
 .donut-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .donut-legend-value { font-weight: 600; color: var(--text-primary); }
@@ -133,8 +133,8 @@
 
 .student-avatar { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: #070B14; flex-shrink: 0; }
 .recent-info  { flex: 1; min-width: 0; }
-.recent-name  { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.recent-plan  { font-size: 12px; color: var(--text-secondary); }
+.recent-name  { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.recent-plan  { font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
 
 .recent-sk-item { display: flex; align-items: center; gap: 12px; padding: 11px var(--gap-md); border-bottom: 1px solid rgba(255,255,255,0.04); }
 .recent-sk-avatar  { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; }
@@ -154,14 +154,14 @@
 .section-card-header { display: flex; align-items: center; justify-content: space-between; padding: 14px var(--gap-md); border-bottom: 1px solid var(--border); }
 .section-card-title  { display: flex; align-items: center; gap: 8px; }
 .section-card-title svg { width: 15px; height: 15px; stroke: currentColor; fill: none; flex-shrink: 0; }
-.section-card-title h3 { font-size: 13px; font-weight: 700; }
+.section-card-title h3 { font-size: 14px; font-weight: 700; }
 
 .section-card-title.danger  { color: var(--red); }
 .section-card-title.warning { color: var(--yellow); }
 .section-card-title.success { color: var(--green); }
 .section-card-title.accent  { color: var(--blue); }
 
-.section-count { font-size: 11px; color: var(--text-secondary); background: rgba(255,255,255,0.06); border: 1px solid var(--border); padding: 2px 8px; border-radius: 10px; }
+.section-count { font-size: 13px; color: var(--text-secondary); background: rgba(255,255,255,0.06); border: 1px solid var(--border); padding: 2px 8px; border-radius: 10px; }
 .section-count.danger  { background: var(--red-dim);    color: var(--red);    border-color: var(--red-border); }
 .section-count.warning { background: var(--yellow-dim); color: var(--yellow); border-color: var(--yellow-border); }
 
@@ -173,12 +173,12 @@
 .table-row:hover { background: rgba(255,255,255,0.025); }
 
 .row-info      { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
-.row-nome      { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.row-plano, .row-meta-text { font-size: 12px; color: var(--text-secondary); }
+.row-nome      { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row-plano, .row-meta-text { font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
 .row-meta      { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.row-valor     { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+.row-valor     { font-size: 14px; font-weight: 700; color: var(--text-primary); }
 .row-valor.verde { color: var(--green); }
-.row-data      { font-size: 12px; color: var(--text-secondary); }
+.row-data      { font-size: 14px; color: var(--text-secondary); }
 
 .btn-pagar {
   background: var(--green-dim); border: 1px solid var(--green-border);
@@ -196,9 +196,9 @@
 
 .inadimpl-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--red-dim); border: 1px solid var(--red-border); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; color: var(--red); flex-shrink: 0; }
 .inadimpl-info  { flex: 1; min-width: 0; }
-.inadimpl-name  { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.inadimpl-days  { font-size: 11px; color: var(--red); font-weight: 600; }
-.inadimpl-valor { font-size: 13px; font-weight: 700; color: var(--text-secondary); flex-shrink: 0; }
+.inadimpl-name  { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.inadimpl-days  { font-size: 13px; color: var(--red); font-weight: 600; }
+.inadimpl-valor { font-size: 14px; font-weight: 700; color: var(--text-secondary); flex-shrink: 0; }
 
 /* ── ALUNO CARD MINI ── */
 .aluno-card-mini { background: var(--green-dim); border: 1px solid var(--green-border); border-radius: var(--radius-input); padding: 12px var(--gap-md); margin-bottom: var(--gap-md); display: flex; flex-direction: column; gap: 4px; }
