@@ -2,7 +2,15 @@
 
 async function verificarAuth() {
   try {
-    const usuario = await getUsuarioAtual();
+    let usuario = await getUsuarioAtual();
+
+    // PWA: ao abrir pelo ícone o Supabase pode demorar ~300ms para restaurar a sessão
+    // Se não achou usuário, tenta mais uma vez após um breve aguardo
+    if (!usuario) {
+      await new Promise(r => setTimeout(r, 350));
+      usuario = await getUsuarioAtual();
+    }
+
     if (!usuario) {
       const base = window.location.pathname.includes('/pages/') ? '../' : '';
       window.location.href = base + 'login.html';

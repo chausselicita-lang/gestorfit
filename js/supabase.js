@@ -38,6 +38,11 @@ async function logout() {
 }
 
 async function getUsuarioAtual() {
+  // getSession() lê do localStorage sem chamada de rede — essencial para PWA
+  // no iOS o getUser() pode retornar null enquanto a sessão ainda está sendo restaurada
+  const { data: { session } } = await db.auth.getSession();
+  if (session?.user) return session.user;
+  // fallback: valida na rede (token pode ter sido revogado)
   const { data: { user } } = await db.auth.getUser();
   return user;
 }
