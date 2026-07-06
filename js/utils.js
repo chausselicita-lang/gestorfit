@@ -218,6 +218,11 @@ async function enviarWhatsApp(telefone, mensagem) {
 // ─── Service Worker ────────────────────────────────
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/gestorfit/sw.js').catch(() => {});
+    navigator.serviceWorker.register('/gestorfit/sw.js').then(reg => {
+      // Força checagem de nova versão a cada visita e periodicamente,
+      // pra CSS/JS em cache-first não ficarem presos numa versão antiga.
+      reg.update().catch(() => {});
+      setInterval(() => reg.update().catch(() => {}), 5 * 60 * 1000);
+    }).catch(() => {});
   });
 }
