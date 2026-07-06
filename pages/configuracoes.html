@@ -425,9 +425,9 @@
   function _zapiStatus(msg, ok) {
     const el = document.getElementById('zapiStatus');
     el.style.display = 'block';
-    el.style.background = ok ? 'rgba(0,212,170,0.08)' : 'rgba(255,71,87,0.08)';
-    el.style.border = ok ? '1px solid rgba(0,212,170,0.25)' : '1px solid rgba(255,71,87,0.25)';
-    el.style.color = ok ? 'var(--verde-neon)' : 'var(--vermelho-alerta)';
+    el.style.background = ok ? 'rgba(22,163,74,0.08)' : 'rgba(220,38,38,0.08)';
+    el.style.border = ok ? '1px solid rgba(22,163,74,0.25)' : '1px solid rgba(220,38,38,0.25)';
+    el.style.color = ok ? 'var(--green)' : 'var(--vermelho-alerta)';
     el.textContent = msg;
   }
 </script>

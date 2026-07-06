@@ -1,12 +1,12 @@
 // js/dashboard.js — GestorFit Dashboard v5
 
 const AVATAR_COLORS = [
-  { color: '#00D48A', bg: 'rgba(0,212,138,.18)' },
-  { color: '#3B82F6', bg: 'rgba(59,130,246,.18)' },
-  { color: '#F59E0B', bg: 'rgba(245,158,11,.18)' },
-  { color: '#8B5CF6', bg: 'rgba(139,92,246,.18)' },
-  { color: '#FF4444', bg: 'rgba(255,68,68,.18)' },
-  { color: '#14B8A6', bg: 'rgba(20,184,166,.18)' },
+  { color: '#16A34A', bg: 'rgba(22,163,74,.14)' },
+  { color: '#2563EB', bg: 'rgba(37,99,235,.14)' },
+  { color: '#D97706', bg: 'rgba(217,119,6,.14)' },
+  { color: '#7C3AED', bg: 'rgba(124,58,237,.14)' },
+  { color: '#DC2626', bg: 'rgba(220,38,38,.14)' },
+  { color: '#0D9488', bg: 'rgba(13,148,136,.14)' },
 ];
 
 let _notificacoes       = [];
@@ -125,7 +125,7 @@ async function carregarDashboard() {
     if (metricas && historico?.length) {
       const sparkReceita = document.getElementById('sparkReceita');
       if (sparkReceita) {
-        sparkReceita.innerHTML = gerarSparkline(historico.map(h => h.total), '#3B82F6');
+        sparkReceita.innerHTML = gerarSparkline(historico.map(h => h.total), '#2563EB');
       }
     }
   });
@@ -155,7 +155,7 @@ function renderizarKPIs(m, vencHoje, inadimpl, historico) {
 
   const sparkAtivos = document.getElementById('sparkAtivos');
   if (sparkAtivos) {
-    sparkAtivos.innerHTML = gerarSparkline(sparkFromBase(m.totalAtivos || 10, 8, 0.08, true), '#00D48A');
+    sparkAtivos.innerHTML = gerarSparkline(sparkFromBase(m.totalAtivos || 10, 8, 0.08, true), '#16A34A');
   }
 
   // ── Receita do Mês — sempre valor completo, sem abreviação
@@ -189,7 +189,7 @@ function renderizarKPIs(m, vencHoje, inadimpl, historico) {
     const data = historico.length >= 2
       ? historico.map(h => h.total)
       : sparkFromBase(m.receitaMes || 1000, 6, 0.12, true);
-    sparkReceita.innerHTML = gerarSparkline(data, '#3B82F6');
+    sparkReceita.innerHTML = gerarSparkline(data, '#2563EB');
   }
 
   // ── Inadimplentes
@@ -210,7 +210,7 @@ function renderizarKPIs(m, vencHoje, inadimpl, historico) {
   const sparkInad = document.getElementById('sparkInadimpl');
   if (sparkInad) {
     const base = m.totalInadimplentes || 1;
-    sparkInad.innerHTML = gerarSparkline(sparkFromBase(base, 8, 0.25, m.totalInadimplentes === 0), '#FF4444');
+    sparkInad.innerHTML = gerarSparkline(sparkFromBase(base, 8, 0.25, m.totalInadimplentes === 0), '#DC2626');
   }
 
   // ── Vencem Hoje
@@ -231,7 +231,7 @@ function renderizarKPIs(m, vencHoje, inadimpl, historico) {
 
   const sparkVencem = document.getElementById('sparkVencem');
   if (sparkVencem) {
-    sparkVencem.innerHTML = gerarSparkline(sparkFromBase(Math.max(vencHoje.length, 1), 7, 0.3, true), '#F59E0B');
+    sparkVencem.innerHTML = gerarSparkline(sparkFromBase(Math.max(vencHoje.length, 1), 7, 0.3, true), '#D97706');
   }
 }
 

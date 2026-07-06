@@ -8,8 +8,8 @@
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
   <link rel="apple-touch-icon" href="assets/icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#0A0F1E">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#FFFFFF">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap" rel="stylesheet">
@@ -19,25 +19,33 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:          #0A0F1E;
-      --card:        #111827;
-      --card2:       #1A2235;
-      --border:      #1F2937;
-      --green:       #00D48A;
-      --green-dim:   rgba(0,212,138,.14);
-      --blue:        #3B82F6;
-      --blue-dim:    rgba(59,130,246,.14);
-      --red:         #FF4444;
-      --red-dim:     rgba(255,68,68,.14);
-      --yellow:      #F59E0B;
-      --yellow-dim:  rgba(245,158,11,.14);
-      --purple:      #8B5CF6;
-      --purple-dim:  rgba(139,92,246,.14);
-      --teal:        #14B8A6;
-      --teal-dim:    rgba(20,184,166,.14);
-      --txt1:        #F9FAFB;
-      --txt2:        #FFFFFF;
-      --txt3:        #FFFFFF;
+      --bg:          #FFFFFF;
+      --card:        #FFFFFF;
+      --card2:       #F2F2F2;
+      --border:      #E4E4E4;
+      --green:       #16A34A;
+      --green-dim:   rgba(22,163,74,.10);
+      --blue:        #2563EB;
+      --blue-dim:    rgba(37,99,235,.10);
+      --red:         #DC2626;
+      --red-dim:     rgba(220,38,38,.08);
+      --yellow:      #D97706;
+      --yellow-dim:  rgba(217,119,6,.10);
+      --purple:      #7C3AED;
+      --purple-dim:  rgba(124,58,237,.10);
+      --teal:        #0D9488;
+      --teal-dim:    rgba(13,148,136,.10);
+      --orange:      #FF7A00;
+      --orange-hover: #FF9633;
+      --orange-dim:  rgba(255,122,0,.10);
+      --on-orange:   #121212;
+      --txt1:        #121212;
+      --txt2:        #4A4A4A;
+      --txt3:        #4A4A4A;
+      --kpi-bg:      #121212;
+      --kpi-line:    rgba(255,255,255,.08);
+      --kpi-fg:      #FFFFFF;
+      --kpi-fg2:     #B0B8C4;
       --radius:      16px;
       --radius-sm:   12px;
     }
@@ -117,15 +125,16 @@
     }
     .profile-overlay.active { opacity: 1; pointer-events: all; }
     .profile-sheet {
-      background: #111420;
+      background: #FFFFFF;
       border-radius: 24px 24px 0 0;
       width: 100%; max-width: 430px;
       padding-bottom: env(safe-area-inset-bottom);
       transform: translateY(100%);
       transition: transform .32s cubic-bezier(.4,0,.2,1);
+      box-shadow: 0 -8px 32px rgba(0,0,0,.15);
     }
     .profile-overlay.active .profile-sheet { transform: translateY(0); }
-    .profile-drag { width: 40px; height: 4px; background: rgba(255,255,255,.12); border-radius: 2px; margin: 14px auto 4px; }
+    .profile-drag { width: 40px; height: 4px; background: rgba(0,0,0,.14); border-radius: 2px; margin: 14px auto 4px; }
     .profile-hd {
       display: flex; align-items: center; justify-content: space-between;
       padding: 10px 20px 16px;
@@ -139,59 +148,59 @@
     .profile-av-circle {
       width: 100px; height: 100px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 36px; font-weight: 800; color: #fff;
-      background: linear-gradient(135deg, #00D48A, #3B82F6);
+      font-size: 36px; font-weight: 800; color: var(--on-orange);
+      background: linear-gradient(135deg, var(--orange), var(--orange-hover));
       overflow: hidden;
       border: 3px solid transparent;
       transition: border-color .2s;
       cursor: pointer;
     }
-    .profile-av-circle.has-photo { border-color: #00D48A; }
+    .profile-av-circle.has-photo { border-color: var(--orange); }
     .profile-av-circle img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
     .profile-cam-btn {
       position: absolute; bottom: 2px; right: 2px;
       width: 30px; height: 30px; min-height: 0;
-      background: #6C63FF; border: 2.5px solid #111420;
+      background: var(--orange); border: 2.5px solid #FFFFFF;
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       cursor: pointer;
     }
-    .profile-cam-btn svg { width: 14px; height: 14px; stroke: white; fill: none; stroke-width: 2.2; }
+    .profile-cam-btn svg { width: 14px; height: 14px; stroke: var(--on-orange); fill: none; stroke-width: 2.2; }
     .profile-preview-row { display: none; flex-direction: column; align-items: center; gap: 8px; }
     .profile-preview-row.show { display: flex; }
-    .profile-preview-img { width: 68px; height: 68px; border-radius: 50%; object-fit: cover; border: 2px solid #6C63FF; }
-    .profile-preview-lbl { font-size: 16px; color: #FFFFFF; }
+    .profile-preview-img { width: 68px; height: 68px; border-radius: 50%; object-fit: cover; border: 2px solid var(--orange); }
+    .profile-preview-lbl { font-size: 16px; color: var(--txt1); }
     .profile-form-area { padding: 0 20px; }
     .profile-form-area label {
       display: block; font-size: 15px; font-weight: 700;
-      color: #FFFFFF; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 8px;
+      color: var(--txt1); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 8px;
     }
     .profile-form-area input {
-      width: 100%; background: rgba(255,255,255,.05);
-      border: 1.5px solid rgba(255,255,255,.1); border-radius: 12px;
-      padding: 14px 16px; color: #F9FAFB;
+      width: 100%; background: rgba(0,0,0,.04);
+      border: 1.5px solid rgba(0,0,0,.12); border-radius: 12px;
+      padding: 14px 16px; color: var(--txt1);
       font-family: 'DM Sans', sans-serif; font-size: 15px;
       outline: none; -webkit-appearance: none;
     }
-    .profile-form-area input:focus { border-color: #6C63FF; box-shadow: 0 0 0 3px rgba(108,99,255,.18); }
+    .profile-form-area input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(255,122,0,.18); }
     .profile-footer {
       display: flex; gap: 10px; padding: 20px;
-      border-top: 1px solid rgba(255,255,255,.07); margin-top: 20px;
+      border-top: 1px solid rgba(0,0,0,.08); margin-top: 20px;
     }
     .btn-prof-cancel {
       flex: 1; height: 48px;
-      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
-      border-radius: 12px; color: #FFFFFF;
+      background: rgba(0,0,0,.04); border: 1px solid rgba(0,0,0,.12);
+      border-radius: 12px; color: var(--txt1);
       font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer;
     }
     .btn-prof-save {
-      flex: 2; height: 48px; background: #6C63FF; border: none;
-      border-radius: 12px; color: white;
+      flex: 2; height: 48px; background: var(--orange); border: none;
+      border-radius: 12px; color: var(--on-orange);
       font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700;
       cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
       transition: background .18s;
     }
-    .btn-prof-save:hover { background: #7c74ff; }
+    .btn-prof-save:hover { background: var(--orange-hover); }
     .btn-prof-save:disabled { opacity: .5; cursor: default; }
     .prof-spinner {
       width: 18px; height: 18px; flex-shrink: 0;
@@ -208,7 +217,7 @@
     }
     .btn-prof-sair svg { width: 14px; height: 14px; stroke: currentColor; fill: none; }
     /* header avatar with photo */
-    .header-avatar.has-photo { border: 2.5px solid #00D48A; overflow: hidden; padding: 0; }
+    .header-avatar.has-photo { border: 2.5px solid var(--orange); overflow: hidden; padding: 0; }
     .header-avatar.has-photo img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 
     .btn-bell {
@@ -237,10 +246,10 @@
     .header-avatar {
       width: 44px; height: 44px;
       border-radius: 50%;
-      background: var(--green-dim);
-      border: 2.5px solid var(--green);
+      background: var(--orange-dim);
+      border: 2.5px solid var(--orange);
       display: flex; align-items: center; justify-content: center;
-      font-size: 15px; font-weight: 700; color: var(--green);
+      font-size: 15px; font-weight: 700; color: var(--orange);
       position: relative;
       cursor: pointer;
       overflow: hidden;
@@ -271,8 +280,8 @@
     }
 
     .kpi-card {
-      background: var(--card);
-      border: 1px solid var(--border);
+      background: var(--kpi-bg);
+      border: 1px solid var(--kpi-line);
       border-radius: var(--radius);
       padding: 14px 14px 0;
       overflow: hidden;
@@ -324,7 +333,7 @@
 
     .kpi-info-btn {
       background: none; border: none; cursor: pointer;
-      color: var(--txt3);
+      color: var(--kpi-fg2);
       display: flex; align-items: center;
       flex-shrink: 0;
       min-height: 0;
@@ -343,7 +352,7 @@
     .kpi-value {
       font-size: 26px; font-weight: 800;
       line-height: 1.05;
-      color: var(--txt1);
+      color: var(--orange);
       letter-spacing: -0.5px;
     }
     .kpi-value.sm {
@@ -368,7 +377,7 @@
     }
     .kpi-sub.up      { color: var(--green); }
     .kpi-sub.down    { color: var(--red); }
-    .kpi-sub.neutral { color: var(--txt2); }
+    .kpi-sub.neutral { color: var(--kpi-fg2); }
 
     .kpi-spark {
       margin-top: auto;
@@ -441,7 +450,7 @@
     }
     .link-ver-todos {
       font-size: 13px; font-weight: 600;
-      color: var(--green);
+      color: var(--orange);
       text-decoration: none;
       background: none; border: none; cursor: pointer;
       min-height: 0;
@@ -519,16 +528,16 @@
       cursor: pointer;
       font-family: 'DM Sans', sans-serif;
       font-size: 14px; font-weight: 600;
-      color: var(--green);
+      color: var(--orange);
       transition: background .15s;
       min-height: 0;
     }
-    .btn-ver-todos-venc:active { background: var(--green-dim); }
+    .btn-ver-todos-venc:active { background: var(--orange-dim); }
 
     /* ── ANIVERSARIANTES ── */
     .aniversar-card {
-      background: rgba(0,212,138,.13);
-      border: 1px solid rgba(0,212,138,.35);
+      background: rgba(22,163,74,.08);
+      border: 1px solid rgba(22,163,74,.28);
       border-radius: var(--radius);
       overflow: hidden;
     }
@@ -537,7 +546,7 @@
       align-items: center;
       gap: 12px;
       padding: 14px 16px;
-      border-bottom: 1px solid rgba(0,212,138,.18);
+      border-bottom: 1px solid rgba(22,163,74,.16);
     }
     .aniversar-item:last-child { border-bottom: none; }
     .aniversar-avatar {
@@ -545,7 +554,7 @@
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       font-size: 16px; font-weight: 700;
-      border: 2px solid rgba(0,212,138,.5);
+      border: 2px solid rgba(22,163,74,.4);
     }
     .aniversar-info { flex: 1; min-width: 0; }
     .aniversar-name {
@@ -684,13 +693,13 @@
       font-size: 14px; font-weight: 600;
     }
 
-    .nav-item.active svg      { stroke: var(--green); fill: none; }
-    .nav-item.active .nav-label { color: var(--green); }
+    .nav-item.active svg      { stroke: var(--orange); fill: none; }
+    .nav-item.active .nav-label { color: var(--orange); }
     .nav-item:not(.active) svg   { stroke: var(--txt3); fill: none; }
     .nav-item:not(.active) .nav-label { color: var(--txt3); }
 
     /* active home icon — filled house */
-    .nav-item.active .icon-home { fill: var(--green); stroke: var(--green); }
+    .nav-item.active .icon-home { fill: var(--orange); stroke: var(--orange); }
 
     /* ── NOTIFICATION PANEL ── */
     .notif-overlay {
@@ -727,7 +736,7 @@
       background: none; border: none; cursor: pointer;
       font-family: 'DM Sans', sans-serif;
       font-size: 12px; font-weight: 600;
-      color: var(--green);
+      color: var(--orange);
       min-height: 0;
     }
     .btn-icon-close {
@@ -845,8 +854,8 @@
     .btn-primary {
       flex: 1;
       height: 48px;
-      background: var(--green);
-      color: #000;
+      background: var(--orange);
+      color: var(--on-orange);
       border: none; border-radius: 12px;
       font-family: 'DM Sans', sans-serif;
       font-size: 15px; font-weight: 700;
@@ -955,7 +964,7 @@
       to   { background-position:  200% 0; }
     }
     .sk {
-      background: linear-gradient(90deg, var(--card2) 25%, #1e2a3a 50%, var(--card2) 75%);
+      background: linear-gradient(90deg, #E4E4E4 25%, #EFEFEF 50%, #E4E4E4 75%);
       background-size: 200% 100%;
       animation: shimmer 1.4s infinite;
       border-radius: 6px;

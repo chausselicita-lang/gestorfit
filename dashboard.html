@@ -7,8 +7,8 @@
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="assets/icons/icon-72.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#0A0F1E">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#FFFFFF">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
@@ -18,22 +18,30 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:        #0A0F1E;
-      --card:      #111827;
-      --card2:     #1A2235;
-      --border:    #1F2937;
-      --green:     #00D48A;
-      --green-dim: rgba(0,212,138,.12);
-      --blue:      #3B82F6;
-      --blue-dim:  rgba(59,130,246,.12);
-      --red:       #FF4444;
-      --red-dim:   rgba(255,68,68,.12);
-      --yellow:    #F59E0B;
-      --yellow-dim:rgba(245,158,11,.12);
-      --purple:    #8B5CF6;
-      --txt1:      #F9FAFB;
-      --txt2:      #9CA3AF;
-      --txt3:      #6B7280;
+      --bg:        #FFFFFF;
+      --card:      #FFFFFF;
+      --card2:     #F2F2F2;
+      --border:    #E4E4E4;
+      --green:     #16A34A;
+      --green-dim: rgba(22,163,74,.10);
+      --blue:      #2563EB;
+      --blue-dim:  rgba(37,99,235,.10);
+      --red:       #DC2626;
+      --red-dim:   rgba(220,38,38,.08);
+      --yellow:    #D97706;
+      --yellow-dim:rgba(217,119,6,.10);
+      --purple:    #7C3AED;
+      --orange:      #FF7A00;
+      --orange-hover: #FF9633;
+      --orange-dim:  rgba(255,122,0,.10);
+      --on-orange:   #121212;
+      --txt1:      #121212;
+      --txt2:      #4A4A4A;
+      --txt3:      #6B6B6B;
+      --kpi-bg:    #121212;
+      --kpi-line:  rgba(255,255,255,.08);
+      --kpi-fg:    #FFFFFF;
+      --kpi-fg2:   #B0B8C4;
       --radius:    16px;
       --radius-sm: 12px;
     }
@@ -121,10 +129,10 @@
     .header-avatar {
       width: 44px; height: 44px;
       border-radius: 50%;
-      background: var(--green-dim);
-      border: 2px solid var(--green);
+      background: var(--orange-dim);
+      border: 2px solid var(--orange);
       display: flex; align-items: center; justify-content: center;
-      font-size: 15px; font-weight: 700; color: var(--green);
+      font-size: 15px; font-weight: 700; color: var(--orange);
       position: relative;
       cursor: pointer;
       overflow: hidden;
@@ -157,8 +165,8 @@
     }
 
     .kpi-card {
-      background: var(--card);
-      border: 1px solid var(--border);
+      background: var(--kpi-bg);
+      border: 1px solid var(--kpi-line);
       border-radius: var(--radius);
       padding: 16px 16px 0;
       overflow: hidden;
@@ -196,20 +204,20 @@
 
     .kpi-info-btn {
       background: none; border: none; cursor: pointer;
-      color: var(--txt3);
+      color: var(--kpi-fg2);
       display: flex; align-items: center;
     }
 
     .kpi-value {
       font-size: 26px; font-weight: 700;
       line-height: 1.1;
-      color: var(--txt1);
+      color: var(--orange);
       margin-bottom: 4px;
     }
 
     .kpi-label {
       font-size: 13px; font-weight: 500;
-      color: var(--txt2);
+      color: var(--kpi-fg2);
     }
 
     .kpi-sub {
@@ -218,7 +226,7 @@
     }
     .kpi-sub.up   { color: var(--green); }
     .kpi-sub.down { color: var(--red); }
-    .kpi-sub.neutral { color: var(--txt3); }
+    .kpi-sub.neutral { color: var(--kpi-fg2); }
 
     .kpi-spark {
       margin-top: auto;
@@ -743,7 +751,7 @@
       to   { background-position:  200% 0; }
     }
     .sk {
-      background: linear-gradient(90deg, var(--card2) 25%, #1e2a3a 50%, var(--card2) 75%);
+      background: linear-gradient(90deg, #E4E4E4 25%, #EFEFEF 50%, #E4E4E4 75%);
       background-size: 200% 100%;
       animation: shimmer 1.4s infinite;
       border-radius: 6px;
