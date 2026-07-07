@@ -8,7 +8,7 @@
 
 .kpi-card {
   background: var(--bg-card);
-  border: 1px solid var(--card-line);
+  border: 1px solid var(--border);
   border-radius: var(--radius-card);
   padding: 22px;
   transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
@@ -74,12 +74,12 @@
 
 .kpi-trend-badge.up      { background: var(--green-dim);           color: var(--green); }
 .kpi-trend-badge.down    { background: var(--red-dim);             color: var(--red); }
-.kpi-trend-badge.neutral { background: rgba(255,255,255,0.08); color: var(--card-fg-secondary); }
+.kpi-trend-badge.neutral { background: rgba(176,184,196,0.08); color: var(--text-secondary); }
 .kpi-trend-badge svg { width: 10px; height: 10px; stroke: currentColor; fill: none; }
 
-.kpi-value { font-size: 30px; font-weight: 700; line-height: 1; letter-spacing: -0.5px; color: var(--orange); margin-bottom: 6px; }
-.kpi-label { font-size: 15px; font-weight: 600; color: var(--card-fg-secondary); text-transform: uppercase; letter-spacing: 0.7px; }
-.kpi-sub   { font-size: 16px; color: var(--card-fg-secondary); margin-top: 4px; line-height: 1.5; }
+.kpi-value { font-size: 30px; font-weight: 700; line-height: 1; letter-spacing: -0.5px; color: var(--text-primary); margin-bottom: 6px; }
+.kpi-label { font-size: 15px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.7px; }
+.kpi-sub   { font-size: 16px; color: var(--text-secondary); margin-top: 4px; line-height: 1.5; }
 
 .birthday-mini-list { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; max-height: 52px; overflow: hidden; }
 .birthday-mini-item { font-size: 15px; color: var(--yellow); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -93,19 +93,18 @@
 }
 
 .chart-card, .donut-card, .recent-card {
-  background: var(--bg-panel);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
   overflow: hidden;
-  box-shadow: var(--shadow-card);
 }
 
 .card-header { display: flex; align-items: center; justify-content: space-between; padding: 16px var(--gap-md); border-bottom: 1px solid var(--border); }
 .card-header h3 { font-size: 16px; font-weight: 700; }
 .card-header-meta { font-size: 16px; color: var(--text-secondary); }
 
-.link-ver-todos { font-size: 12px; color: var(--orange); font-weight: 500; transition: color 0.18s; }
-.link-ver-todos:hover { color: var(--orange-hover); text-decoration: underline; }
+.link-ver-todos { font-size: 12px; color: var(--green); font-weight: 500; transition: color 0.18s; }
+.link-ver-todos:hover { color: #1aff95; text-decoration: underline; }
 
 .chart-body { padding: 16px var(--gap-md) var(--gap-md); }
 .chart-container { position: relative; height: 200px; }
@@ -128,16 +127,16 @@
 .recent-card { display: flex; flex-direction: column; }
 .recent-list { padding: 0; }
 
-.recent-item { display: flex; align-items: center; gap: 12px; padding: 11px var(--gap-md); border-bottom: 1px solid rgba(0,0,0,0.05); transition: background 0.15s; }
+.recent-item { display: flex; align-items: center; gap: 12px; padding: 11px var(--gap-md); border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s; }
 .recent-item:last-child { border-bottom: none; }
-.recent-item:hover { background: rgba(0,0,0,0.025); }
+.recent-item:hover { background: rgba(255,255,255,0.025); }
 
-.student-avatar { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: var(--on-orange); flex-shrink: 0; }
+.student-avatar { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: #070B14; flex-shrink: 0; }
 .recent-info  { flex: 1; min-width: 0; }
 .recent-name  { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .recent-plan  { font-size: 16px; color: var(--text-secondary); line-height: 1.5; }
 
-.recent-sk-item { display: flex; align-items: center; gap: 12px; padding: 11px var(--gap-md); border-bottom: 1px solid rgba(0,0,0,0.05); }
+.recent-sk-item { display: flex; align-items: center; gap: 12px; padding: 11px var(--gap-md); border-bottom: 1px solid rgba(255,255,255,0.04); }
 .recent-sk-avatar  { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; }
 .recent-sk-content { flex: 1; }
 .recent-sk-name    { height: 12px; width: 70%; margin-bottom: 6px; border-radius: 4px; }
@@ -150,7 +149,7 @@
   gap: var(--gap-md);
 }
 
-.section-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-card); overflow: hidden; box-shadow: var(--shadow-card); }
+.section-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); overflow: hidden; }
 
 .section-card-header { display: flex; align-items: center; justify-content: space-between; padding: 14px var(--gap-md); border-bottom: 1px solid var(--border); }
 .section-card-title  { display: flex; align-items: center; gap: 8px; }
@@ -162,16 +161,16 @@
 .section-card-title.success { color: var(--green); }
 .section-card-title.accent  { color: var(--blue); }
 
-.section-count { font-size: 15px; color: var(--text-secondary); background: rgba(0,0,0,0.05); border: 1px solid var(--border); padding: 2px 8px; border-radius: 10px; }
+.section-count { font-size: 15px; color: var(--text-secondary); background: rgba(255,255,255,0.06); border: 1px solid var(--border); padding: 2px 8px; border-radius: 10px; }
 .section-count.danger  { background: var(--red-dim);    color: var(--red);    border-color: var(--red-border); }
 .section-count.warning { background: var(--yellow-dim); color: var(--yellow); border-color: var(--yellow-border); }
 
 .section-list { max-height: 280px; overflow-y: auto; }
 
 /* ── TABLE ROWS ── */
-.table-row { display: flex; align-items: center; justify-content: space-between; padding: 11px var(--gap-md); border-bottom: 1px solid rgba(0,0,0,0.05); transition: background 0.15s; gap: 10px; }
+.table-row { display: flex; align-items: center; justify-content: space-between; padding: 11px var(--gap-md); border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s; gap: 10px; }
 .table-row:last-child { border-bottom: none; }
-.table-row:hover { background: rgba(0,0,0,0.025); }
+.table-row:hover { background: rgba(255,255,255,0.025); }
 
 .row-info      { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
 .row-nome      { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -188,10 +187,10 @@
   transition: all 0.18s; font-family: var(--font);
 }
 
-.btn-pagar:hover { background: rgba(22,163,74,0.18); }
+.btn-pagar:hover { background: rgba(0,255,136,0.18); }
 
 /* ── INADIMPLENTE ROW ── */
-.inadimpl-row { display: flex; align-items: center; gap: 10px; padding: 11px var(--gap-md); border-bottom: 1px solid rgba(0,0,0,0.05); transition: background 0.15s; }
+.inadimpl-row { display: flex; align-items: center; gap: 10px; padding: 11px var(--gap-md); border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s; }
 .inadimpl-row:last-child { border-bottom: none; }
 .inadimpl-row:hover { background: rgba(255,77,109,0.04); }
 
@@ -202,7 +201,7 @@
 .inadimpl-valor { font-size: 16px; font-weight: 700; color: var(--text-secondary); flex-shrink: 0; }
 
 /* ── ALUNO CARD MINI ── */
-.aluno-card-mini { background: var(--orange-dim); border: 1px solid var(--orange-border); border-radius: var(--radius-input); padding: 12px var(--gap-md); margin-bottom: var(--gap-md); display: flex; flex-direction: column; gap: 4px; }
+.aluno-card-mini { background: var(--green-dim); border: 1px solid var(--green-border); border-radius: var(--radius-input); padding: 12px var(--gap-md); margin-bottom: var(--gap-md); display: flex; flex-direction: column; gap: 4px; }
 .aluno-card-mini strong { font-size: 14px; }
 .aluno-card-mini span  { font-size: 12px; color: var(--text-secondary); }
 
@@ -213,7 +212,7 @@
 .table-period  { font-size: 12px; color: var(--text-secondary); }
 .table-header  { display: flex; align-items: center; justify-content: space-between; padding: var(--gap-md); border-bottom: 1px solid var(--border); }
 .table-body    { max-height: 340px; overflow-y: auto; }
-.table-card    { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-card); overflow: hidden; }
+.table-card    { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); overflow: hidden; }
 
 /* ── RESPONSIVE ── */
 @media (max-width: 1400px) {

@@ -8,7 +8,7 @@
   <link rel="icon" href="assets/icons/icon-72.png">
   <link rel="apple-touch-icon" href="assets/icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="GestorFit">
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/components.css">
@@ -79,7 +79,7 @@
         Ainda não tem conta? <a href="#" style="color:var(--verde-neon);" onclick="alert('Contate o suporte para criar uma conta.')">Fale conosco</a>
       </p>
 
-      <div id="loginErro" style="display:none;margin-top:16px;padding:12px;background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.25);border-radius:8px;color:var(--vermelho-alerta);font-size:14px;"></div>
+      <div id="loginErro" style="display:none;margin-top:16px;padding:12px;background:rgba(255,59,92,0.1);border:1px solid rgba(255,59,92,0.3);border-radius:8px;color:var(--vermelho-alerta);font-size:14px;"></div>
 
       <div class="login-footer">
         GestorFit v1.0 &nbsp;·&nbsp; <a href="pages/verificar.html" style="color:var(--cinza-texto);">Verificar recibo</a>
@@ -101,7 +101,7 @@
     </div>
     <div id="resetMsg" style="display:none;margin:12px 0;padding:12px 14px;border-radius:10px;font-size:13px;line-height:1.5"></div>
     <div style="display:flex;gap:10px;margin-top:8px">
-      <button id="btnEnviarReset" onclick="enviarReset()" style="flex:1;padding:13px;background:var(--accent);color:var(--on-orange);border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer">
+      <button id="btnEnviarReset" onclick="enviarReset()" style="flex:1;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer">
         <span id="btnResetText">Enviar link</span>
       </button>
       <button onclick="fecharModal()" style="padding:13px 18px;background:transparent;color:var(--cinza-texto);border:1px solid var(--card-border);border-radius:12px;font-size:14px;cursor:pointer">
@@ -154,8 +154,8 @@
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       msgEl.style.display = 'block';
-      msgEl.style.background = 'rgba(220,38,38,0.08)';
-      msgEl.style.border = '1px solid rgba(220,38,38,0.25)';
+      msgEl.style.background = 'rgba(255,71,87,0.1)';
+      msgEl.style.border = '1px solid rgba(255,71,87,0.3)';
       msgEl.style.color = 'var(--vermelho-alerta)';
       msgEl.textContent = 'Informe um e-mail válido.';
       return;
@@ -169,16 +169,16 @@
       const { error } = await db.auth.resetPasswordForEmail(email, { redirectTo: redirectUrl });
       if (error) throw error;
       msgEl.style.display = 'block';
-      msgEl.style.background = 'rgba(22,163,74,0.08)';
-      msgEl.style.border = '1px solid rgba(22,163,74,0.25)';
-      msgEl.style.color = 'var(--green)';
+      msgEl.style.background = 'rgba(0,212,170,0.08)';
+      msgEl.style.border = '1px solid rgba(0,212,170,0.25)';
+      msgEl.style.color = 'var(--verde-neon)';
       msgEl.textContent = '✅ Link enviado! Verifique seu e-mail (inclusive a pasta de spam).';
       btn.disabled = false;
       txt.textContent = 'Reenviar link';
     } catch (err) {
       msgEl.style.display = 'block';
-      msgEl.style.background = 'rgba(220,38,38,0.08)';
-      msgEl.style.border = '1px solid rgba(220,38,38,0.25)';
+      msgEl.style.background = 'rgba(255,71,87,0.1)';
+      msgEl.style.border = '1px solid rgba(255,71,87,0.3)';
       msgEl.style.color = 'var(--vermelho-alerta)';
       msgEl.textContent = 'Erro: ' + (err.message || 'Tente novamente.');
       btn.disabled = false;

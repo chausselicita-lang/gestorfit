@@ -91,17 +91,17 @@
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
         <span style="font-size:28px">✅</span>
         <div>
-          <div style="font-weight:700;font-size:16px;color:var(--green)">Recibo Autêntico</div>
+          <div style="font-weight:700;font-size:16px;color:var(--verde-neon)">Recibo Autêntico</div>
           <div style="font-size:13px;color:var(--cinza-texto)">Este recibo foi emitido pelo GestorFit e é válido</div>
         </div>
       </div>
       <div class="verify-item"><span>Aluno</span><strong>${p.alunos?.nome || '--'}</strong></div>
       <div class="verify-item"><span>CPF</span><strong>${p.alunos?.cpf || 'Não informado'}</strong></div>
-      <div class="verify-item"><span>Valor Pago</span><strong style="color:var(--green)">${formatarMoeda(p.valor)}</strong></div>
+      <div class="verify-item"><span>Valor Pago</span><strong style="color:var(--verde-neon)">${formatarMoeda(p.valor)}</strong></div>
       <div class="verify-item"><span>Data do Pagamento</span><strong>${formatarData(p.data_pagamento)}</strong></div>
       <div class="verify-item"><span>Forma de Pagamento</span><strong>${getFormaPagamentoBadge(p.forma_pagamento)}</strong></div>
       <div class="verify-item"><span>Referência</span><strong>${p.referencia_mes || '--'}</strong></div>
-      <div class="verify-item"><span>Status</span><strong style="color:var(--green)">✅ Pago</strong></div>
+      <div class="verify-item"><span>Status</span><strong style="color:var(--verde-neon)">✅ Pago</strong></div>
       <div class="verify-item"><span>Código de Verificação</span><strong style="font-family:monospace">${p.codigo_verificacao}</strong></div>
     `;
   }
